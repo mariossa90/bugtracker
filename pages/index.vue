@@ -17,7 +17,14 @@
               @click="fetchBoardData"
             >
               <div class="flex flex-col items-center gap-0.5">
-                <span class="font-medium">{{ isLoading ? 'Updating...' : 'Update Board Data' }}</span>
+                <span class="font-medium">
+                  {{ isLoading 
+                      ? (isCalendarLoading 
+                          ? 'Fetching Calendar...' 
+                          : 'Updating...') 
+                      : 'Update Board Data' 
+                  }}
+                </span>
                 <AutoUpdateCountdown ref="countdownRef" class="text-white/90" />
               </div>
             </Button>
@@ -204,12 +211,14 @@ import CurrentDateTime from '~/components/CurrentDateTime.vue'
 import ApiResponseTime from '~/components/ApiResponseTime.vue'
 import CustomDatePicker from '~/components/CustomDatePicker.vue'
 import { useFullscreen } from '~/composables/useFullscreen'
+import { useCalendarStore } from '~/stores/calendar'
 
 const mondayStore = useMondayStore()
 const settingsStore = useSettingsStore()
 const { user, boards, isLoading: isLoadingMonday, error: errorMonday, fetchBoardData: fetchBoardDataFromMonday } = useMonday()
 const { processDailyTime } = useDailyTime()
 const { isFullscreen, toggleFullscreen } = useFullscreen()
+const calendarStore = useCalendarStore()
 
 const hasItems = computed(() => {
   return mondayStore.boards.some(board => board.tasks.length > 0)
@@ -242,8 +251,11 @@ const lastResponseTime = ref<number | null>(null)
 
 const activeBoard = ref('time-tracking')
 
+const isCalendarLoading = ref(false)
+
 const fetchBoardData = async () => {
   isLoading.value = true
+  isCalendarLoading.value = false
   error.value = null
   const startTime = performance.now()
   
@@ -251,11 +263,16 @@ const fetchBoardData = async () => {
     await fetchBoardDataFromMonday()
     const endTime = performance.now()
     lastResponseTime.value = (endTime - startTime) / 1000 // Convert to seconds
+    
+    // Set calendar loading state
+    isCalendarLoading.value = true
+    await calendarStore.fetchCalendarData()
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'An error occurred while fetching data'
     lastResponseTime.value = null
   } finally {
     isLoading.value = false
+    isCalendarLoading.value = false
   }
   await processDailyTime()
 }
