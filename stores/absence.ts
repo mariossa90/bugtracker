@@ -72,10 +72,9 @@ export const useAbsenceStore = defineStore('absence', {
                   mappedReason = 'Sick Leave'
                   break
                 default:
-                  // Keep the original reason if it doesn't match any of the above
                   break
               }
-              
+
               this.addAbsence(mondayUser.name, {
                 type: mappedReason,
                 startDate: startDate.toISOString().split('T')[0],

@@ -79,6 +79,33 @@
       </div>
     </div>
     
+    <!-- Calendar Update Settings -->
+    <div class="mt-8">
+      <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Calendar Update Settings</h3>
+      <div class="space-y-4">
+        <div class="flex items-center justify-between px-4 py-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors duration-200">
+          <div class="flex flex-col">
+            <span class="text-sm text-light-text-primary dark:text-white">Calendar Update Interval</span>
+            <span class="text-sm text-gray-500 dark:text-gray-400">Time between calendar data updates</span>
+          </div>
+          <div class="relative w-32">
+            <input
+              type="number"
+              v-model="settingsStore.calendarUpdateInterval"
+              min="1"
+              max="24"
+              step="1"
+              class="block w-full rounded-md border border-light-border dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-1.5 text-light-text-primary dark:text-white text-sm focus:border-[#5bbcaa] focus:ring-[#5bbcaa] text-center"
+              placeholder="Enter hours"
+            >
+            <div class="absolute inset-y-0 right-2 flex items-center pointer-events-none">
+              <span class="text-sm text-gray-500 dark:text-gray-400">h</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
     <!-- View Mode Settings -->
     <div class="mt-8">
       <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">View Mode Settings</h3>

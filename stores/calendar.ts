@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { useGraph } from '~/composables/useGraph'
 import type { CalendarEvent } from '~/composables/useGraph'
 import { useAbsenceStore } from './absence'
+import { useSettingsStore } from '~/stores/settings'
 
 interface CalendarState {
   events: CalendarEvent[]
@@ -26,6 +27,18 @@ export const useCalendarStore = defineStore('calendar', {
     async fetchCalendarData() {
       const { fetchCalendarEvents } = useGraph()
       const absenceStore = useAbsenceStore()
+      const settingsStore = useSettingsStore()
+      
+      // Check if we need to fetch
+      if (this.lastFetch) {
+        const updateIntervalHours = settingsStore.calendarUpdateInterval || 6 // fallback to 6 hours
+        const updateInterval = new Date(Date.now() - updateIntervalHours * 60 * 60 * 1000)
+        if (new Date(this.lastFetch) > updateInterval) {
+          // Data is fresh enough, no need to fetch
+          return
+        }
+      }
+
       this.loading = true
       this.error = null
       
@@ -43,7 +56,6 @@ export const useCalendarStore = defineStore('calendar', {
         }
       } catch (error) {
         this.error = error instanceof Error ? error.message : 'Failed to fetch calendar data'
-        console.error('Calendar fetch error:', error)
       } finally {
         this.loading = false
       }

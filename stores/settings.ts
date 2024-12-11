@@ -19,7 +19,7 @@ interface SettingsState {
     timePieChart: boolean
     taskDetails: boolean
   }
-  // Add other settings here as needed
+  calendarUpdateInterval: number
 }
 
 export const useSettingsStore = defineStore('settings', {
@@ -41,8 +41,8 @@ export const useSettingsStore = defineStore('settings', {
       timeBarChart: true,
       timePieChart: true,
       taskDetails: true
-    }
-    // Add other settings here as needed
+    },
+    calendarUpdateInterval: 6
   }),
 
   actions: {
@@ -99,6 +99,10 @@ export const useSettingsStore = defineStore('settings', {
 
     toggleAnalyticsVisibility(element: keyof SettingsState['analyticsVisibility']) {
       this.analyticsVisibility[element] = !this.analyticsVisibility[element]
+    },
+
+    setCalendarUpdateInterval(hours: number) {
+      this.calendarUpdateInterval = hours
     }
   },
 
