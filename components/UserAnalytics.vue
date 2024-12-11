@@ -92,7 +92,7 @@
       <!-- Left Column (Bar Charts) -->
       <div class="space-y-8" ref="chartsColumn">
         <!-- Tasks Bar Chart -->
-        <div>
+        <div v-if="settingsStore.analyticsVisibility.tasksBarChart">
           <h3 class="text-lg font-medium text-gray-800 dark:text-gray-200 mb-4">Assigned Tasks</h3>
           <div v-if="selectedUser" class="bg-gray-50 dark:bg-gray-800/70 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
             <Chart 
@@ -108,7 +108,7 @@
         </div>
         
         <!-- Time Bar Chart -->
-        <div>
+        <div v-if="settingsStore.analyticsVisibility.timeBarChart">
           <h3 class="text-lg font-medium text-gray-800 dark:text-gray-200 mb-4">Time Tracked</h3>
           <div v-if="selectedUser" class="bg-gray-50 dark:bg-gray-800/70 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
             <Chart 
@@ -125,7 +125,7 @@
       </div>
 
       <!-- Middle Column -->
-      <div>
+      <div v-if="settingsStore.analyticsVisibility.taskDetails">
         <h3 class="text-lg font-medium text-gray-800 dark:text-gray-200 mb-4">Task Details</h3>
         <div 
           class="bg-gray-50 dark:bg-gray-800/70 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm overflow-auto"
@@ -214,7 +214,7 @@
       <!-- Right Column (Pie Charts) -->
       <div class="space-y-8">
         <!-- Tasks Pie Chart -->
-        <div>
+        <div v-if="settingsStore.analyticsVisibility.tasksPieChart">
           <h3 class="text-lg font-medium text-gray-800 dark:text-gray-200 mb-4">Tasks Distribution</h3>
           <div v-if="selectedUser" class="bg-gray-50 dark:bg-gray-800/70 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
             <Chart 
@@ -227,7 +227,7 @@
         </div>
         
         <!-- Time Pie Chart -->
-        <div>
+        <div v-if="settingsStore.analyticsVisibility.timePieChart">
           <h3 class="text-lg font-medium text-gray-800 dark:text-gray-200 mb-4">Time Distribution</h3>
           <div v-if="selectedUser" class="bg-gray-50 dark:bg-gray-800/70 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
             <Chart 

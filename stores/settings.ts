@@ -12,6 +12,13 @@ interface SettingsState {
   selectedDate: Date
   selectedMenu: 'general' | 'boards' | 'userVisibility' | 'userGoal' | 'analytics'
   hiddenProjects: string[]
+  analyticsVisibility: {
+    tasksBarChart: boolean
+    tasksPieChart: boolean
+    timeBarChart: boolean
+    timePieChart: boolean
+    taskDetails: boolean
+  }
   // Add other settings here as needed
 }
 
@@ -28,6 +35,13 @@ export const useSettingsStore = defineStore('settings', {
     selectedDate: new Date(), // Initialize with current date
     selectedMenu: 'general', // Default selected menu
     hiddenProjects: [], // Initialize empty hidden projects array
+    analyticsVisibility: {
+      tasksBarChart: true,
+      tasksPieChart: true,
+      timeBarChart: true,
+      timePieChart: true,
+      taskDetails: true
+    }
     // Add other settings here as needed
   }),
 
@@ -81,6 +95,10 @@ export const useSettingsStore = defineStore('settings', {
       } else {
         this.hiddenProjects.push(projectName)
       }
+    },
+
+    toggleAnalyticsVisibility(element: keyof SettingsState['analyticsVisibility']) {
+      this.analyticsVisibility[element] = !this.analyticsVisibility[element]
     }
   },
 

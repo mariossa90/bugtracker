@@ -434,87 +434,53 @@ export function useUserAnalytics(
         // Skip tasks with unwanted statuses
         if (taskStatus === 'Cancelled') return
 
-        // Get project name and assigned user
+        // Get project name
         const projectColumn = task.columnValues.find(cv => cv.id === 'project8__1')
         const projectName = projectColumn?.text || 'No Project'
-        const personColumn = task.columnValues.find(cv => cv.id === 'person')
-        const assignedUser = personColumn?.text
 
-        // In total view, include all assigned tasks regardless of time tracking
-        if (selectedPeriod.value === 'total' && assignedUser === selectedUser.value) {
-          projectTasks.set(
-            projectName,
-            (projectTasks.get(projectName) || 0) + 1
-          )
-          return // Skip time tracking check for total view
-        }
-
-        // For other views, continue with time tracking check
+        // Check if user has tracked time on this task
         const timeColumns = task.columnValues.filter(cv => 
           ['zeiterfassung5__1', 'zeiterfassung__1'].includes(cv.id)
         )
 
         let hasTimeInPeriod = false
+        const userId = userStore.users.find(u => u.name === selectedUser.value)?.id.toString()
+        
         timeColumns.forEach(timeColumn => {
-          if (timeColumn.duration) {
-            if (!range) {
+          if (timeColumn.history) {
+            const timeTracked = calculateTimeFromHistory(timeColumn.history, userId, range)
+            if (timeTracked > 0) {
               hasTimeInPeriod = true
-            } else if (timeColumn.value) {
-              try {
-                const timeValue = JSON.parse(timeColumn.value)
-                const timeDate = new Date(timeValue.changed_at || timeValue.timestamp)
-                if (timeDate >= range.start && timeDate <= range.end) {
-                  hasTimeInPeriod = true
-                }
-              } catch (e) {
-                console.warn('Could not parse time value:', timeColumn.value)
-              }
             }
           }
         })
 
-        // Skip if no time tracked in period (except for total view)
-        if (!hasTimeInPeriod) return
-        
-        // Count task if assigned to user
-        if (assignedUser === selectedUser.value) {
+        // Count task if user tracked time on it
+        if (hasTimeInPeriod) {
           projectTasks.set(
             projectName, 
             (projectTasks.get(projectName) || 0) + 1
           )
         }
         
-        // Check subitems if they exist
+        // Check subitems
         task.subitems?.forEach(subitem => {
-          const subitemPerson = subitem.column_values.find(cv => cv.id === 'person')
-          const subitemAssignedUser = subitemPerson?.text
-          
-          // Check if subitem has time entries in the selected period
-          let hasSubitemTimeInPeriod = false
           const subitemTimeColumns = subitem.column_values.filter(cv => 
             cv.id === 'zeiterfassung__1'
           )
           
+          let hasSubitemTimeInPeriod = false
           subitemTimeColumns.forEach(timeColumn => {
-            if (timeColumn.duration) {
-              if (!range) {
+            if (timeColumn.history) {
+              const timeTracked = calculateTimeFromHistory(timeColumn.history, userId, range)
+              if (timeTracked > 0) {
                 hasSubitemTimeInPeriod = true
-              } else if (timeColumn.value) {
-                try {
-                  const timeValue = JSON.parse(timeColumn.value)
-                  const timeDate = new Date(timeValue.changed_at || timeValue.timestamp)
-                  if (timeDate >= range.start && timeDate <= range.end) {
-                    hasSubitemTimeInPeriod = true
-                  }
-                } catch (e) {
-                  console.warn('Could not parse time value:', timeColumn.value)
-                }
               }
             }
           })
 
-          // Only count subitem if it has time tracked in period
-          if (hasSubitemTimeInPeriod && subitemAssignedUser === selectedUser.value) {
+          // Count subitem if user tracked time on it
+          if (hasSubitemTimeInPeriod) {
             projectTasks.set(
               projectName,
               (projectTasks.get(projectName) || 0) + 1
@@ -524,7 +490,7 @@ export function useUserAnalytics(
       })
     })
     
-    // Filter out projects that should not be visible
+    // Filter visible projects
     const filteredTasks = new Map<string, number>()
     for (const [project, count] of projectTasks) {
       if (settingsStore.isProjectVisible(project)) {
