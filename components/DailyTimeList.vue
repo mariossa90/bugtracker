@@ -78,6 +78,12 @@
                             </svg>
                           </button>
                         </div>
+                        <!-- Show absence badge if user is absent -->
+                        <span v-if="getAbsenceInfo(user, date)" 
+                              class="text-xs px-2 py-0.5 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-200"
+                        >
+                          {{ getAbsenceInfo(user, date) }}
+                        </span>
                         <!-- Detailed view mode: Show ticket chips -->
                         <div v-if="!settingsStore.compactViewMode && hasDailyEntries(user, date)" 
                              class="flex flex-col gap-1 max-h-24 overflow-y-auto custom-scrollbar p-1 w-[260px] self-start"
@@ -146,6 +152,7 @@ import { useMondayStore } from '~/stores/monday'
 import { useUserStore } from '~/stores/userStore'
 import { useUserName } from '~/composables/useUserName'
 import DatePicker from 'primevue/datepicker'
+import { useAbsenceStore } from '~/stores/absence'
 
 const mondayStore = useMondayStore()
 const dailyTimeStore = useDailyTimeStore()
@@ -154,6 +161,7 @@ const userStore = useUserStore()
 const { processDailyTime } = useDailyTime()
 const { calculateGoalStatus, getGoalStatusClass, formatGoalProgress } = useWorkGoals()
 const { formatUserName } = useUserName()
+const absenceStore = useAbsenceStore()
 
 // Initialize selectedDate with start of day
 const today = new Date()
@@ -346,6 +354,11 @@ const getTicketTimeRange = (user: string, date: string, ticketId: string) => {
     end: formatTimeOnly(endTimes.sort().reverse()[0])
   }
 }
+
+const getAbsenceInfo = (user: string, date: string) => {
+  const reason = absenceStore.getUserAbsenceReason(user, date)
+  return reason || null
+}
 </script>
 
 <style scoped>
@@ -417,5 +430,11 @@ const getTicketTimeRange = (user: string, date: string, ticketId: string) => {
 
 :global(.dark) .loading-backdrop-edge {
   background: rgb(255 255 255 / 0.03);
+}
+
+.absence-badge {
+  @apply text-sm px-2 py-1 rounded-md;
+  @apply bg-orange-100 dark:bg-orange-900/30;
+  @apply text-orange-800 dark:text-orange-200;
 }
 </style>
