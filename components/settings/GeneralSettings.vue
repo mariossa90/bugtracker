@@ -101,6 +101,34 @@
         </div>
       </div>
     </div>
+    
+    <!-- Calendar Test Section -->
+    <div class="mt-8">
+      <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Calendar Integration Test</h3>
+      <div class="flex items-center gap-4">
+        <button
+          @click="testCalendarFetch"
+          class="px-4 py-2 text-sm font-medium rounded-lg transition-colors
+                 bg-[#5bbcaa] text-white hover:bg-[#4ca899]
+                 disabled:opacity-50 disabled:cursor-not-allowed"
+          :disabled="calendarStore.loading"
+        >
+          <span v-if="!calendarStore.loading">Test Calendar Fetch</span>
+          <span v-else>Fetching...</span>
+        </button>
+        <span v-if="calendarStore.lastFetch" class="text-sm text-gray-500 dark:text-gray-400">
+          Last fetch: {{ new Date(calendarStore.lastFetch).toLocaleString() }}
+        </span>
+      </div>
+      <!-- Error Message -->
+      <div v-if="calendarStore.error" class="mt-2 text-sm text-red-600 dark:text-red-400">
+        {{ calendarStore.error }}
+      </div>
+      <!-- Success Message -->
+      <div v-if="calendarStore.events.length && !calendarStore.error" class="mt-2 text-sm text-green-600 dark:text-green-400">
+        Successfully fetched {{ calendarStore.events.length }} calendar events
+      </div>
+    </div>
   </div>
 </template>
 
@@ -148,8 +176,10 @@ input[type="number"] {
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { useSettingsStore } from '~/stores/settings'
+import { useCalendarStore } from '~/stores/calendar'
 
 const settingsStore = useSettingsStore()
+const calendarStore = useCalendarStore()
 const selectedTheme = ref(settingsStore.theme)
 
 const toggleAutoUpdate = () => {
@@ -181,4 +211,12 @@ const systemLineClass = computed(() => {
     ? 'bg-gray-500'
     : 'bg-gray-300'
 })
+
+const testCalendarFetch = async () => {
+  try {
+    await calendarStore.fetchCalendarData()
+  } catch (error) {
+    console.error('Calendar fetch error:', error)
+  }
+}
 </script>

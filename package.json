@@ -10,6 +10,7 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
+    "@azure/identity": "^4.5.0",
     "@azure/msal-browser": "^3.27.0",
     "@microsoft/microsoft-graph-client": "^3.0.7",
     "@pinia/nuxt": "^0.8.0",
