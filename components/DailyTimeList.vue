@@ -58,13 +58,29 @@
                     </td>
                     <td v-for="date in lastSevenDays" 
                         :key="date" 
-                        class="h-12 py-4 px-2 text-center text-light-text-primary dark:text-gray-300 group-hover:bg-transparent"
+                        class="h-12 py-4 px-2 text-center text-light-text-primary dark:text-gray-300 group-hover:bg-transparent relative"
                         :class="[
                           isToday(date) ? '' : getGoalStatusClass(calculateGoalStatus(getDailyTotal(user, date), user, date)),
                           'transition-colors duration-200'
                         ]"
                     >
-                      <div class="flex flex-col items-center justify-center gap-1">
+                      <!-- Show absence badge if user is absent -->
+                      <span v-if="getAbsenceInfo(user, date)" 
+                            class="absolute top-0 right-0 text-sm px-3 py-1 rounded-bl-lg bg-blue-500 dark:bg-blue-600 text-white dark:text-white flex items-center gap-1.5 shadow-sm"
+                      >
+                        <i v-if="getAbsenceInfo(user, date) === 'Sick Leave'" 
+                        class="fa-solid fa-house-medical"> 
+                        </i> 
+                        <i v-if="getAbsenceInfo(user, date) === 'Vacation'" 
+                           class="fa-solid fa-umbrella-beach">
+                        </i>
+                        <i v-if="getAbsenceInfo(user, date) === 'Business Trip'" 
+                           class="fa-solid fa-plane-departure">
+                        </i>
+                        {{ getAbsenceInfo(user, date) }}
+                      </span>
+                      
+                      <div class="flex flex-col items-center justify-center gap-1 mt-6">
                         <div class="flex items-center gap-2">
                           <span class="text-lg font-medium">{{ formatDuration(getDailyTotal(user, date)) }}</span>
                           <button 
@@ -78,12 +94,7 @@
                             </svg>
                           </button>
                         </div>
-                        <!-- Show absence badge if user is absent -->
-                        <span v-if="getAbsenceInfo(user, date)" 
-                              class="text-xs px-2 py-0.5 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-200"
-                        >
-                          {{ getAbsenceInfo(user, date) }}
-                        </span>
+                        
                         <!-- Detailed view mode: Show ticket chips -->
                         <div v-if="!settingsStore.compactViewMode && hasDailyEntries(user, date)" 
                              class="flex flex-col gap-1 max-h-24 overflow-y-auto custom-scrollbar p-1 w-[260px] self-start"

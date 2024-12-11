@@ -52,16 +52,32 @@ export const useAbsenceStore = defineStore('absence', {
               const endDate = new Date(event.end.dateTime)
               
               // Adjust start date if it begins at midnight (00:00)
-              // This is needed because absence events starting at midnight (00:00)
-              // were incorrectly including the start date in the absence period
               if (startDate.getHours() === 0 && 
                   startDate.getMinutes() === 0 && 
                   startDate.getSeconds() === 0) {
                 startDate.setDate(startDate.getDate() + 1)
               }
               
+              // Map German reasons to English
+              let mappedReason = parsedUser.reason || 'Vacation'
+              switch (mappedReason) {
+                case 'DR':
+                  mappedReason = 'Business Trip'
+                  break
+                case 'Urlaub':
+                  mappedReason = 'Vacation'
+                  break
+                case 'Krank':
+                case 'Pflege':
+                  mappedReason = 'Sick Leave'
+                  break
+                default:
+                  // Keep the original reason if it doesn't match any of the above
+                  break
+              }
+              
               this.addAbsence(mondayUser.name, {
-                type: parsedUser.reason || 'Unknown',
+                type: mappedReason,
                 startDate: startDate.toISOString().split('T')[0],
                 endDate: endDate.toISOString().split('T')[0],
                 isAllDay: event.isAllDay
