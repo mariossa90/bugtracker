@@ -1,0 +1,10 @@
+/* Global scrollbar styling */
+.custom-scrollbar {
+  @apply scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 
+         dark:scrollbar-thumb-gray-600 dark:scrollbar-track-gray-800;
+}
+
+/* Optional: Hover states for scrollbar */
+.custom-scrollbar:hover {
+  @apply scrollbar-thumb-gray-400 dark:scrollbar-thumb-gray-500;
+}
