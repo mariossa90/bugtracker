@@ -7,7 +7,7 @@
       <div class="overflow-x-auto -mx-6 custom-scrollbar">
         <div class="inline-block min-w-full align-middle">
           <div class="overflow-hidden px-4 relative">
-            <table class="min-w-full divide-y divide-light-divider dark:divide-gray-700 relative">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <!-- Loading overlay -->
               <tbody>
                 <tr v-if="isLoading" class="absolute top-12 left-0 right-0 bottom-0 z-50">
@@ -25,8 +25,9 @@
               </tbody>
               <thead class="bg-[#5bbcaa]/5 dark:bg-[#5bbcaa]/10">
                 <tr>
-                  <th class="h-12 px-2 text-center text-sm font-semibold text-light-text-primary dark:text-white sticky left-0 bg-[#5bbcaa]/5 dark:bg-[#5bbcaa]/10 uppercase whitespace-nowrap w-[180px]">USER</th>
-                  <th class="h-12 px-2 text-center text-sm font-semibold text-light-text-primary dark:text-white w-[160px] bg-[#5bbcaa]/5 dark:bg-[#5bbcaa]/10 uppercase">CURRENT TASK</th>
+                  <th class="h-12 px-2 text-center text-sm font-semibold text-light-text-primary dark:text-white sticky left-0 bg-[#5bbcaa]/5 dark:bg-[#5bbcaa]/10 uppercase whitespace-nowrap w-[180px]">
+                    USER
+                  </th>
                   <th v-for="date in lastSevenDays" 
                       :key="date" 
                       class="h-12 px-2 text-center text-sm font-semibold text-light-text-primary dark:text-white bg-[#5bbcaa]/5 dark:bg-[#5bbcaa]/10 uppercase w-[260px]"
@@ -40,21 +41,35 @@
                   <!-- User row -->
                   <tr class="group hover:bg-light-secondary/50 dark:hover:bg-gray-600/80 transition-colors duration-200">
                     <td class="h-12 py-4 pl-8 font-medium text-light-text-primary dark:text-white bg-gray-400/10 dark:bg-gray-900">
-                      <div class="flex items-center w-[250px] gap-2">
-                        <template v-if="settingsStore.showUserImages">
-                          <img 
-                            v-if="getUserImage(user)"
-                            :src="getUserImage(user)!"
-                            :alt="user"
-                            class="w-8 h-8 rounded-full flex-shrink-0"
-                          />
-                          <i v-else class="fas fa-user w-8 h-8 rounded-full flex-shrink-0 bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400"></i>
-                        </template>
-                        <span class="truncate">{{ formatUserName(user) }}</span>
+                      <div class="flex flex-col gap-1 w-[250px]">
+                        <!-- User info group -->
+                        <div class="flex flex-col gap-2">
+                          <!-- User image and name row -->
+                          <div class="flex items-center gap-2">
+                            <template v-if="settingsStore.showUserImages">
+                              <img 
+                                v-if="getUserImage(user)"
+                                :src="getUserImage(user)!"
+                                :alt="user"
+                                class="w-8 h-8 rounded-full flex-shrink-0"
+                              />
+                              <i v-else class="fas fa-user w-8 h-8 rounded-full flex-shrink-0 bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400"></i>
+                            </template>
+                            <span class="truncate">{{ formatUserName(user) }}</span>
+                          </div>
+                          
+                          <!-- Current task chip row -->
+                          <div v-if="getCurrentTask(user) && isUserCurrentlyWorking(user)" 
+                               class="truncate max-w-full"
+                          >
+                            <div class="text-sm px-2 py-0.5 rounded-full bg-[#5bbcaa]/10 text-[#5bbcaa] dark:bg-[#5bbcaa]/20 truncate"
+                                 :title="getCurrentTask(user)"
+                            >
+                              {{ getCurrentTask(user) }}
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                    </td>
-                    <td class="h-12 py-4 px-2 text-center text-light-text-primary dark:text-gray-300 group-hover:bg-transparent">
-                      <span class="inline-block max-w-[300px] truncate">{{ getCurrentTask(user) }}</span>
                     </td>
                     <td v-for="date in lastSevenDays" 
                         :key="date" 
@@ -80,7 +95,7 @@
                         {{ getAbsenceInfo(user, date) }}
                       </span>
                       
-                      <div class="flex flex-col items-center justify-center gap-1 mt-6">
+                      <div class="flex flex-col items-center justify-center gap-1 mt-2">
                         <div class="flex items-center gap-2">
                           <span class="text-lg font-medium">{{ formatDuration(getDailyTotal(user, date)) }}</span>
                           <button 
@@ -380,6 +395,11 @@ const getTicketTimeRange = (user: string, date: string, ticketId: string) => {
 const getAbsenceInfo = (user: string, date: string) => {
   const reason = absenceStore.getUserAbsenceReason(user, date)
   return reason || null
+}
+
+const isUserCurrentlyWorking = (user: string) => {
+  const entries = getDailyEntries(user, formatDate(new Date().toISOString()))
+  return entries.some(entry => !entry.endTime || entry.endTime === 'NaN:NaN')
 }
 </script>
 
