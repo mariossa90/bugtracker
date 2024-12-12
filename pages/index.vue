@@ -80,7 +80,7 @@
                   ]"
                   :title="!isSidebarExpanded ? 'Time Tracking' : ''"
                 >
-                  <i class="w-5 h-5" :class="[
+                  <i class="w-4 h-4 flex-shrink-0 flex items-center justify-center" :class="[
                     activeBoard === 'time-tracking' ? 'fa-solid fa-clock' : 'fa-regular fa-clock'
                   ]"></i>
                   <span 
@@ -100,7 +100,7 @@
                   ]"
                   :title="!isSidebarExpanded ? 'Project Analytics' : ''"
                 >
-                  <i class="w-5 h-5" :class="[
+                  <i class="w-4 h-4 flex-shrink-0" :class="[
                     activeBoard === 'analytics' ? 'fa-solid fa-chart-bar' : 'fa-regular fa-chart-bar'
                   ]"></i>
                   <span 
@@ -120,7 +120,7 @@
                   ]"
                   :title="!isSidebarExpanded ? 'User Analytics' : ''"
                 >
-                  <i class="w-5 h-5" :class="[
+                  <i class="w-4 h-4 flex-shrink-0" :class="[
                     activeBoard === 'user-analytics' ? 'fa-solid fa-user' : 'fa-regular fa-user'
                   ]"></i>
                   <span 
