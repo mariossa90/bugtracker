@@ -20,6 +20,8 @@ interface SettingsState {
     taskDetails: boolean
   }
   calendarUpdateInterval: number
+  visibleDays: number
+  hideWeekends: boolean
 }
 
 export const useSettingsStore = defineStore('settings', {
@@ -42,7 +44,9 @@ export const useSettingsStore = defineStore('settings', {
       timePieChart: true,
       taskDetails: true
     },
-    calendarUpdateInterval: 6
+    calendarUpdateInterval: 6,
+    visibleDays: 7,
+    hideWeekends: false
   }),
 
   actions: {
@@ -103,6 +107,14 @@ export const useSettingsStore = defineStore('settings', {
 
     setCalendarUpdateInterval(hours: number) {
       this.calendarUpdateInterval = hours
+    },
+
+    setVisibleDays(days: number) {
+      this.visibleDays = days
+    },
+
+    setHideWeekends(hide: boolean) {
+      this.hideWeekends = hide
     }
   },
 

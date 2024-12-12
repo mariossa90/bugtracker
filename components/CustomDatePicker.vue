@@ -1,14 +1,35 @@
 <template>  
+  <div class="flex items-center gap-2">
+    <!-- Next Day Button -->
+    <button 
+      @click="changeDate(1)"
+      class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-gray-600 dark:text-gray-300"
+      title="Next Day"
+    >
+      <i class="fas fa-chevron-left w-4 h-4"></i>
+    </button>
+
+    <!-- Date Picker -->
     <FloatLabel variant="on">
-    <DatePicker 
-      v-model="selectedDate"      
-      :show-icon="true"
-      dateFormat="dd/mm/yy"
-      :showTime="false"
-      @change="handleDateChange"      
-    />
-    <label for="start-date">Start Date</label>
-  </FloatLabel>
+      <DatePicker 
+        v-model="selectedDate"      
+        :show-icon="true"
+        dateFormat="dd/mm/yy"
+        :showTime="false"
+        @change="handleDateChange"      
+      />
+      <label for="start-date">Start Date</label>
+    </FloatLabel>
+
+    <!-- Previous Day Button -->
+    <button 
+      @click="changeDate(-1)"
+      class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-gray-600 dark:text-gray-300"
+      title="Previous Day"
+    >
+      <i class="fas fa-chevron-right w-4 h-4"></i>
+    </button>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -38,6 +59,16 @@ const handleDateChange = (e: Date) => {
   // Update both the local ref and the store
   selectedDate.value = date
   settingsStore.setSelectedDate(date)
+}
+
+// Add this function to handle date navigation
+const changeDate = (days: number) => {
+  const newDate = new Date(selectedDate.value)
+  newDate.setDate(newDate.getDate() + days)
+  newDate.setHours(0, 0, 0, 0)
+  
+  selectedDate.value = newDate
+  settingsStore.setSelectedDate(newDate)
 }
 
 onMounted(() => {

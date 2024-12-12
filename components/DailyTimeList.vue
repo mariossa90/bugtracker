@@ -187,18 +187,29 @@ const isLoading = computed(() => mondayStore.loading);
 
 const lastSevenDays = computed(() => {
   const dates = []
-  // Ensure we're working with the start of the day
   const startDate = new Date(settingsStore.selectedDate)
   startDate.setHours(0, 0, 0, 0)
   
-  for (let i = 0; i < 7; i++) {
+  let i = 0
+  let daysAdded = 0
+  while (daysAdded < settingsStore.visibleDays) {
     const date = new Date(startDate)
     date.setDate(date.getDate() - i)
-    // Format date without timezone issues
+    
+    // Skip weekends if hideWeekends is enabled
+    const dayOfWeek = date.getDay()
+    if (settingsStore.hideWeekends && (dayOfWeek === 0 || dayOfWeek === 6)) {
+      i++
+      continue
+    }
+    
     const year = date.getFullYear()
     const month = String(date.getMonth() + 1).padStart(2, '0')
     const day = String(date.getDate()).padStart(2, '0')
     dates.push(`${year}-${month}-${day}`)
+    
+    i++
+    daysAdded++
   }
   return dates
 })
