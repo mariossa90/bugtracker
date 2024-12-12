@@ -7,14 +7,14 @@
       <div class="overflow-x-auto -mx-6 custom-scrollbar">
         <div class="inline-block min-w-full align-middle">
           <div class="overflow-hidden px-4 relative">
-            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <table class="min-w-full rounded-lg border dark:border-gray-700 overflow-hidden">
               <!-- Loading overlay -->
               <tbody>
-                <tr v-if="isLoading" class="absolute top-12 left-0 right-0 bottom-0 z-50">
-                  <td colspan="100%" class="h-full">
+                <tr v-if="isLoading" class="absolute top-0 left-4 right-4 bottom-0 z-50">
+                  <td colspan="100%" class="h-full rounded-lg overflow-hidden">
                     <div class="absolute inset-0 flex items-center justify-center">
-                      <div class="loading-backdrop"></div>
-                      <div class="loading-backdrop-edge"></div>
+                      <div class="loading-backdrop rounded-lg"></div>
+                      <div class="loading-backdrop-edge rounded-lg"></div>
                       <div class="relative z-10 flex flex-col items-center gap-3">
                         <i class="fas fa-circle-notch fa-spin fa-2x text-[#5bbcaa]"></i>
                         <span class="text-sm font-medium text-[#5bbcaa]">Updating data...</span>
@@ -36,11 +36,11 @@
                   </th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-light-divider dark:divide-gray-700">
+              <tbody class="[&>tr:last-child>td]:border-b dark:[&>tr:last-child>td]:border-gray-700">
                 <template v-for="(user, index) in uniqueUsers" :key="user">
                   <!-- User row -->
-                  <tr class="group hover:bg-light-secondary/50 dark:hover:bg-gray-600/80 transition-colors duration-200">
-                    <td class="h-12 py-4 pl-8 font-medium text-light-text-primary dark:text-white bg-gray-400/10 dark:bg-gray-900">
+                  <tr class="group">
+                    <td class="h-12 py-4 pl-8 font-medium text-light-text-primary dark:text-white bg-gray-400/10 dark:bg-gray-900/70 border dark:border-gray-700">
                       <div class="flex flex-col gap-1 w-[250px]">
                         <!-- User info group -->
                         <div class="flex flex-col gap-2">
@@ -73,10 +73,12 @@
                     </td>
                     <td v-for="date in lastSevenDays" 
                         :key="date" 
-                        class="h-12 py-4 px-2 text-center text-light-text-primary dark:text-gray-300 group-hover:bg-transparent relative"
+                        class="h-12 py-4 px-2 text-center text-light-text-primary dark:text-gray-300 relative transition-opacity duration-200 group-hover:[&:not(:hover)]:opacity-70"
                         :class="[
-                          isToday(date) ? '' : getGoalStatusClass(calculateGoalStatus(getDailyTotal(user, date), user, date)),
-                          'transition-colors duration-200'
+                          isToday(date) ? 'border-t border-l border-b dark:border-gray-700' : [
+                            getGoalStatusClass(calculateGoalStatus(getDailyTotal(user, date), user, date)),
+                            'transition-colors duration-200'
+                          ]
                         ]"
                     >
                       <!-- Show absence badge if user is absent -->
@@ -437,9 +439,10 @@ const isUserCurrentlyWorking = (user: string) => {
   position: absolute;
   inset: 0;
   height: 200%;
-  background:hsl(0deg 0% 100% / 0.1);
+  background: hsl(0deg 0% 100% / 0.1);
   pointer-events: none;
   backdrop-filter: blur(16px);
+  border-radius: 0.5rem;
   mask-image: linear-gradient(
     to bottom,
     black 0,
@@ -457,6 +460,7 @@ const isUserCurrentlyWorking = (user: string) => {
   background: rgb(0 0 0 / 0.15);
   backdrop-filter: blur(8px) brightness(120%);
   pointer-events: none;
+  border-radius: 0.5rem;
   mask-image: linear-gradient(
     to bottom,
     black 0,
