@@ -10,7 +10,7 @@ interface SettingsState {
   compactViewMode: boolean
   showFirstNameOnly: boolean
   selectedDate: Date
-  selectedMenu: 'general' | 'boards' | 'userVisibility' | 'userGoal' | 'analytics'
+  selectedMenu: 'general' | 'boards' | 'userVisibility' | 'userGoal' | 'analytics' | 'table'
   hiddenProjects: string[]
   analyticsVisibility: {
     tasksBarChart: boolean

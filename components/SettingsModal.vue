@@ -42,6 +42,17 @@
                 General
               </button>
               <button
+                @click="settingsStore.selectedMenu = 'table'"
+                :class="[
+                  'w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+                  selectedMenu === 'table'
+                    ? 'bg-[#5bbcaa] bg-opacity-10 text-[#5bbcaa]'
+                    : 'text-light-text-secondary dark:text-gray-300 hover:bg-light-secondary dark:hover:bg-gray-700/50'
+                ]"
+              >
+                Table
+              </button>
+              <button
                 @click="settingsStore.selectedMenu = 'boards'"
                 :class="[
                   'w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors',
@@ -85,6 +96,7 @@
               >
                 Analytics
               </button>
+              
             </div>
           </div>
 
@@ -105,6 +117,7 @@
             <div v-else-if="selectedMenu === 'analytics'">
               <AnalyticsSettings />
             </div>
+            <TableSettings v-else-if="settingsStore.selectedMenu === 'table'" />
           </div>
         </div>    
       </div>
@@ -120,6 +133,7 @@ import BoardSettings from './settings/BoardSettings.vue'
 import UserVisibilitySettings from './settings/UserVisibilitySettings.vue'
 import UserGoalsSettings from './settings/UserGoalsSettings.vue'
 import AnalyticsSettings from './settings/AnalyticsSettings.vue'
+import TableSettings from '~/components/settings/TableSettings.vue'
 
 const props = defineProps({
   isOpen: {
