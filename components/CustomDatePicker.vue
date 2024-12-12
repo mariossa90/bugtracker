@@ -1,5 +1,18 @@
 <template>  
   <div class="flex items-center gap-2">
+   
+    <!-- Today Button with label -->
+ <div v-if="!isToday" class="relative w-[84px] h-[42px] border border-[#cbd5e1] dark:border-[#3a3a3a] rounded-[6px]">
+  <span class="absolute -top-2.5 left-6 -translate-x-1/2 text-xs text-[#94a3b8] dark:text-[#696c6b] bg-[#fefefe] dark:bg-[#1e1e1e] px-1 z-10">Today</span>
+  <button 
+    @click="setToday"
+    class="absolute inset-0 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-[#334155] dark:text-[#8f9291] flex items-center justify-center rounded-[6px]"
+    title="Set to Today"
+  >
+    <i class="fa-solid fa-calendar-day"></i>
+  </button>
+</div>
+
     <!-- Next Day Button -->
     <button 
       @click="changeDate(1)"
@@ -20,7 +33,8 @@
       />
       <label for="start-date">Start Date</label>
     </FloatLabel>
-
+ 
+   
     <!-- Previous Day Button -->
     <button 
       @click="changeDate(-1)"
@@ -33,7 +47,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, computed } from 'vue'
 import DatePicker from 'primevue/datepicker'
 import { useSettingsStore } from '~/stores/settings'
 
@@ -69,6 +83,23 @@ const changeDate = (days: number) => {
   
   selectedDate.value = newDate
   settingsStore.setSelectedDate(newDate)
+}
+
+// Add computed property to check if selected date is today
+const isToday = computed(() => {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const selected = new Date(selectedDate.value)
+  selected.setHours(0, 0, 0, 0)
+  return today.getTime() === selected.getTime()
+})
+
+// Add function to set date to today
+const setToday = () => {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  selectedDate.value = today
+  settingsStore.setSelectedDate(today)
 }
 
 onMounted(() => {
