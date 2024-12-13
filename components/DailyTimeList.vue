@@ -128,6 +128,19 @@
                           </div>
                         </div>
                       </div>
+                      
+                      <!-- Add email button for missed/exceeded goals -->
+                      <button v-if="shouldShowEmailButton(user, date)"
+                              @click="openEmailTemplate(user, date)"
+                              class="absolute top-0 right-0 text-sm px-3 py-1 rounded-bl-lg shadow-sm flex items-center gap-1.5 transition-colors"
+                              :class="calculateGoalStatus(getDailyTotal(user, date), user, date) === 'GOAL_MISSED' 
+                                      ? 'bg-red-500 dark:bg-red-600 text-white dark:text-white hover:bg-red-600 dark:hover:bg-red-700' 
+                                      : 'bg-orange-500 dark:bg-orange-600 text-white dark:text-white hover:bg-orange-600 dark:hover:bg-orange-700'"
+                              :title="getEmailButtonTitle(user, date)"
+                      >
+                        <i class="fas fa-envelope text-sm"></i>
+                        <i class="fas fa-exclamation text-sm"></i>
+                      </button>
                     </td>
                   </tr>
                   <!-- Details row -->
@@ -178,6 +191,7 @@ import { useDailyTimeStore } from '~/stores/dailyTime'
 import { useSettingsStore } from '~/stores/settings'
 import { useMondayStore } from '~/stores/monday'
 import { useUserStore } from '~/stores/userStore'
+import { useWorkGoalsStore } from '~/stores/workGoals'
 import { useUserName } from '~/composables/useUserName'
 import DatePicker from 'primevue/datepicker'
 import { useAbsenceStore } from '~/stores/absence'
@@ -186,8 +200,9 @@ const mondayStore = useMondayStore()
 const dailyTimeStore = useDailyTimeStore()
 const settingsStore = useSettingsStore()
 const userStore = useUserStore()
+const workGoalsStore = useWorkGoalsStore()
 const { processDailyTime } = useDailyTime()
-const { calculateGoalStatus, getGoalStatusClass, formatGoalProgress } = useWorkGoals()
+const { calculateGoalStatus, getGoalStatusClass, formatGoalProgress, durationToHours } = useWorkGoals()
 const { formatUserName } = useUserName()
 const absenceStore = useAbsenceStore()
 
@@ -403,6 +418,67 @@ const isUserCurrentlyWorking = (user: string) => {
   const entries = getDailyEntries(user, formatDate(new Date().toISOString()))
   return entries.some(entry => !entry.endTime || entry.endTime === 'NaN:NaN')
 }
+
+const shouldShowEmailButton = (user: string, date: string) => {
+  if (!settingsStore.enableGoalEmails) return false
+  
+  const status = calculateGoalStatus(getDailyTotal(user, date), user, date)
+  // Don't show button if:
+  // 1. It's today's column
+  // 2. User is marked as absent
+  // 3. Status is not missed or exceeded
+  const isTodays = isToday(date)
+  const isAbsent = getAbsenceInfo(user, date) !== null
+  const isRelevantStatus = status === 'GOAL_MISSED' || status === 'GOAL_EXCEEDED'
+  
+  return !isTodays && !isAbsent && isRelevantStatus
+}
+
+const getEmailButtonTitle = (user: string, date: string) => {
+  const status = calculateGoalStatus(getDailyTotal(user, date), user, date)
+  return status === 'GOAL_MISSED' ? 'Send reminder email' : 'Send overtime notification'
+}
+
+const openEmailTemplate = (user: string, date: string) => {
+  const userEmail = userStore.users.find(u => u.name === user)?.email
+  if (!userEmail) return
+
+  const status = calculateGoalStatus(getDailyTotal(user, date), user, date)
+  const hours = durationToHours(getDailyTotal(user, date))
+  const wholeHours = Math.floor(hours)
+  const minutes = Math.round((hours - wholeHours) * 60)
+  const timeFormatted = `${wholeHours}h ${minutes}m`
+  const goalHours = workGoalsStore.getEffectiveUserGoal(user, date)
+  const firstName = user.split(' ')[0]
+  
+  // Format date for email - use actual date instead of "Yesterday"
+  const emailDate = new Date(date).toLocaleDateString('en-US', { 
+    weekday: 'short', 
+    month: 'short', 
+    day: 'numeric' 
+  })
+  
+  let subject, body
+  
+  if (status === 'GOAL_MISSED') {
+    subject = `Missed Work Goal on ${emailDate}`
+    body = `Hi ${firstName},\n\nI noticed that you logged ${timeFormatted} on ${emailDate}, which is below the daily goal of ${goalHours}h.\nPlease make sure to log your time accurately. \n\nBest regards`
+  } else {
+    subject = `Overtime Notice for ${emailDate}`
+    body = `Hi ${firstName},\n\nI noticed that you logged ${timeFormatted} on ${emailDate}, which is more than double the daily goal of ${goalHours}h. Please check if you forgot to stop the timer on a ticket, or if its correct make sure to maintain a healthy work-life balance.\n\nBest regards`
+  }
+
+  const mailtoLink = `mailto:${userEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+  console.log('Attempting to open email with:', mailtoLink)
+
+  // Create and click a temporary anchor element
+  const a = document.createElement('a')
+  a.href = mailtoLink
+  a.target = '_blank'
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+}
 </script>
 
 <style scoped>
@@ -528,5 +604,14 @@ const isUserCurrentlyWorking = (user: string) => {
 .dark .time-chip {
   background-color: v-bind('settingsStore.chipColors.dark.background');
   color: v-bind('settingsStore.chipColors.dark.text');
+}
+
+.goal-exceeded {
+  background-color: v-bind('settingsStore.goalColors.light.goalExceeded.color');
+  color: v-bind('settingsStore.goalColors.light.textColor');
+}
+.dark .goal-exceeded {
+  background-color: v-bind('settingsStore.goalColors.dark.goalExceeded.color');
+  color: v-bind('settingsStore.goalColors.dark.textColor');
 }
 </style>

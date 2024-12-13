@@ -1,7 +1,7 @@
 import { computed } from 'vue'
 import { useWorkGoalsStore } from '~/stores/workGoals'
 
-export type GoalStatus = 'GOAL_MET' | 'GOAL_PARTIAL' | 'GOAL_MISSED' | 'GOAL_NOT_SET' | 'WEEKEND_NO_TIME'
+export type GoalStatus = 'GOAL_MET' | 'GOAL_PARTIAL' | 'GOAL_MISSED' | 'GOAL_NOT_SET' | 'WEEKEND_NO_TIME' | 'GOAL_EXCEEDED'
 
 export const useWorkGoals = () => {
   const workGoalsStore = useWorkGoalsStore()
@@ -18,9 +18,8 @@ export const useWorkGoals = () => {
   const calculateGoalStatus = (duration: string, userId: string, date: string): GoalStatus => {
     // Check if it's weekend
     const dayOfWeek = new Date(date).getDay()
-    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6 // 0 is Sunday, 6 is Saturday
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
 
-    // For weekends, if there's no time logged (duration is '-' or '0h 0m'), return WEEKEND_NO_TIME
     if (isWeekend && (!duration || duration === '-' || duration === '0h 0m')) {
       return 'WEEKEND_NO_TIME'
     }
@@ -29,6 +28,7 @@ export const useWorkGoals = () => {
     const goalHours = workGoalsStore.getEffectiveUserGoal(userId, date)
     
     if (goalHours === null) return 'GOAL_NOT_SET'
+    if (hours >= goalHours * 2) return 'GOAL_EXCEEDED'
     if (hours >= goalHours) return 'GOAL_MET'
     if (hours >= goalHours * 0.7) return 'GOAL_PARTIAL'
     return 'GOAL_MISSED'
@@ -40,7 +40,8 @@ export const useWorkGoals = () => {
       'GOAL_PARTIAL': 'goal-partial',
       'GOAL_MISSED': 'goal-missed',
       'GOAL_NOT_SET': '',
-      'WEEKEND_NO_TIME': 'weekend-no-time'
+      'WEEKEND_NO_TIME': 'weekend-no-time',
+      'GOAL_EXCEEDED': 'goal-exceeded'
     }
     return classes[status]
   }
@@ -57,6 +58,7 @@ export const useWorkGoals = () => {
   return {
     calculateGoalStatus,
     getGoalStatusClass,
-    formatGoalProgress
+    formatGoalProgress,
+    durationToHours
   }
 }

@@ -12,6 +12,7 @@ interface SettingsState {
   selectedDate: Date
   selectedMenu: 'general' | 'boards' | 'userVisibility' | 'userGoal' | 'analytics' | 'table'
   hiddenProjects: string[]
+  enableGoalEmails: boolean
   analyticsVisibility: {
     tasksBarChart: boolean
     tasksPieChart: boolean
@@ -37,6 +38,9 @@ interface SettingsState {
       weekendNoTime: {
         color: string
       }
+      goalExceeded: {
+        color: string
+      }
     }
     dark: {
       textColor: string
@@ -50,6 +54,9 @@ interface SettingsState {
         color: string
       }
       weekendNoTime: {
+        color: string
+      }
+      goalExceeded: {
         color: string
       }
     }
@@ -79,6 +86,7 @@ export const useSettingsStore = defineStore('settings', {
     selectedDate: new Date(), // Initialize with current date
     selectedMenu: 'general', // Default selected menu
     hiddenProjects: [], // Initialize empty hidden projects array
+    enableGoalEmails: true,
     analyticsVisibility: {
       tasksBarChart: true,
       tasksPieChart: true,
@@ -103,6 +111,9 @@ export const useSettingsStore = defineStore('settings', {
         },
         weekendNoTime: {
           color: '#f9fafb',
+        },
+        goalExceeded: {
+          color: 'rgba(251, 146, 60, 0.2)'
         }
       },
       dark: {
@@ -118,6 +129,9 @@ export const useSettingsStore = defineStore('settings', {
         },
         weekendNoTime: {
           color: '#111827',
+        },
+        goalExceeded: {
+          color: 'rgba(251, 146, 60, 0.1)'
         }
       }
     },
@@ -208,14 +222,16 @@ export const useSettingsStore = defineStore('settings', {
           goalMet: { color: '#adf0cd' },
           goalPartial: { color: '#fbbf24' },
           goalMissed: { color: '#fca5a5' },
-          weekendNoTime: { color: '#f9fafb' }
+          weekendNoTime: { color: '#f9fafb' },
+          goalExceeded: { color: 'rgba(251, 146, 60, 0.2)' }
         },
         dark: {
           textColor: '#f5f5f5',
           goalMet: { color: '#277c48' },
           goalPartial: { color: '#9a7c28' },
           goalMissed: { color: '#762828' },
-          weekendNoTime: { color: '#111827' }
+          weekendNoTime: { color: '#111827' },
+          goalExceeded: { color: 'rgba(251, 146, 60, 0.1)' }
         }
       }
     },

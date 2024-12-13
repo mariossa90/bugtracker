@@ -105,6 +105,29 @@
         </div>
       </div>
     </div>
+    
+    <!-- Email Notifications Settings -->
+    <div class="mt-8">
+      <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Email Notifications</h3>
+      <div class="space-y-4">
+        <div class="flex items-center justify-between px-4 py-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors duration-200">
+          <div class="flex flex-col">
+            <span class="text-sm text-light-text-primary dark:text-white">Enable Goal Notifications</span>
+            <span class="text-sm text-gray-500 dark:text-gray-400">Show email buttons for missed goals and overtime</span>
+          </div>
+          <button
+            @click="settingsStore.enableGoalEmails = !settingsStore.enableGoalEmails"
+            class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#5bbcaa] focus:ring-offset-2"
+            :class="settingsStore.enableGoalEmails ? 'bg-[#5bbcaa]' : 'bg-gray-200 dark:bg-gray-700'"
+          >
+            <span 
+              class="pointer-events-none relative inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+              :class="settingsStore.enableGoalEmails ? 'translate-x-5' : 'translate-x-0'"
+            ></span>
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
