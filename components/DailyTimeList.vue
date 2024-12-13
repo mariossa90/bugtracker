@@ -83,7 +83,7 @@
                     >
                       <!-- Show absence badge if user is absent -->
                       <span v-if="getAbsenceInfo(user, date)" 
-                            class="absolute top-0 right-0 text-base px-4 py-1.5 rounded-bl-lg bg-blue-500 dark:bg-blue-600 text-white dark:text-white flex items-center gap-2 shadow-sm"
+                            class="absolute top-0 right-0 text-base px-4 py-0.5 rounded-bl-lg bg-blue-500 dark:bg-blue-600 text-white dark:text-white flex items-center gap-2 shadow-sm"
                       >
                         <i v-if="getAbsenceInfo(user, date) === 'Sick Leave'" 
                         class="fa-solid fa-house-medical"> 
@@ -132,7 +132,7 @@
                       <!-- Add email button for missed/exceeded goals -->
                       <button v-if="shouldShowEmailButton(user, date)"
                               @click="openEmailTemplate(user, date)"
-                              class="absolute top-0 right-0 text-base px-4 py-1.5 rounded-bl-lg shadow-sm flex items-center gap-2 transition-colors"
+                              class="absolute top-0 right-0 text-base px-4 py-0.5 rounded-bl-lg shadow-sm flex items-center gap-2 transition-colors"
                               :class="calculateGoalStatus(getDailyTotal(user, date), user, date) === 'GOAL_MISSED' 
                                       ? 'bg-red-500 dark:bg-red-600 text-white dark:text-white hover:bg-red-600 dark:hover:bg-red-700' 
                                       : 'bg-orange-500 dark:bg-orange-600 text-white dark:text-white hover:bg-orange-600 dark:hover:bg-orange-700'"
