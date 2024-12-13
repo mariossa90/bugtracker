@@ -467,7 +467,7 @@ const openEmailTemplate = (user: string, date: string) => {
   let subject, body
   
   if (status === 'GOAL_MISSED') {
-    subject = `Missed Work Goal on ${emailDate}`
+    subject = `[Monday] Missed Work Goal on ${emailDate}`
     body = `Hi ${firstName},\n\nI noticed that you logged ${timeFormatted} on ${emailDate}, which is below the daily goal of ${goalHours}h.\nPlease make sure to log your time accurately. \n\nBest regards`
   } else {
     subject = `Overtime Notice for ${emailDate}`
