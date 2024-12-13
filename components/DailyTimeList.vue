@@ -83,7 +83,7 @@
                     >
                       <!-- Show absence badge if user is absent -->
                       <span v-if="getAbsenceInfo(user, date)" 
-                            class="absolute top-0 right-0 text-sm px-3 py-1 rounded-bl-lg bg-blue-500 dark:bg-blue-600 text-white dark:text-white flex items-center gap-1.5 shadow-sm"
+                            class="absolute top-0 right-0 text-base px-4 py-1.5 rounded-bl-lg bg-blue-500 dark:bg-blue-600 text-white dark:text-white flex items-center gap-2 shadow-sm"
                       >
                         <i v-if="getAbsenceInfo(user, date) === 'Sick Leave'" 
                         class="fa-solid fa-house-medical"> 
@@ -132,14 +132,20 @@
                       <!-- Add email button for missed/exceeded goals -->
                       <button v-if="shouldShowEmailButton(user, date)"
                               @click="openEmailTemplate(user, date)"
-                              class="absolute top-0 right-0 text-sm px-3 py-1 rounded-bl-lg shadow-sm flex items-center gap-1.5 transition-colors"
+                              class="absolute top-0 right-0 text-base px-4 py-1.5 rounded-bl-lg shadow-sm flex items-center gap-2 transition-colors"
                               :class="calculateGoalStatus(getDailyTotal(user, date), user, date) === 'GOAL_MISSED' 
                                       ? 'bg-red-500 dark:bg-red-600 text-white dark:text-white hover:bg-red-600 dark:hover:bg-red-700' 
                                       : 'bg-orange-500 dark:bg-orange-600 text-white dark:text-white hover:bg-orange-600 dark:hover:bg-orange-700'"
                               :title="getEmailButtonTitle(user, date)"
                       >
-                        <i class="fas fa-envelope text-sm"></i>
-                        <i class="fas fa-exclamation text-sm"></i>
+                        <div class="relative">
+                          <i class="far fa-envelope text-lg"></i>
+                          <i class="fas fa-circle-exclamation text-[0.85em] absolute -bottom-0 -right-3 border-2 rounded-full"
+                             :class="calculateGoalStatus(getDailyTotal(user, date), user, date) === 'GOAL_MISSED' 
+                                     ? 'border-red-500 dark:border-red-600' 
+                                     : 'border-orange-500 dark:border-orange-600'"
+                          ></i>
+                        </div>
                       </button>
                     </td>
                   </tr>
