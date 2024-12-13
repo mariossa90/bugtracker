@@ -73,7 +73,7 @@
                     </td>
                     <td v-for="date in lastSevenDays" 
                         :key="date" 
-                        class="h-12 py-4 px-2 text-center text-light-text-primary dark:text-gray-300 relative transition-opacity duration-200 group-hover:[&:not(:hover)]:opacity-70"
+                        class="h-12 py-4 px-2 text-center text-light-text-primary dark:text-gray-300 relative transition-opacity duration-200 group-hover:[&:not(:hover)]:opacity-80"
                         :class="[
                           isToday(date) ? 'border-t border-l border-b dark:border-gray-700' : [
                             getGoalStatusClass(calculateGoalStatus(getDailyTotal(user, date), user, date)),
@@ -118,7 +118,7 @@
                         >
                           <div v-for="ticket in getGroupedTickets(user, date)" 
                                :key="ticket.id"
-                               class="time-chip inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[#5bbcaa]/10 text-[#5bbcaa] dark:bg-[#5bbcaa]/20 dark:text-[#5bbcaa] w-full text-left"
+                               class="time-chip inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium w-full text-left"
                                :title="ticket.name + ' (' + getTicketTimeRange(user, date, ticket.id).start + ' - ' + getTicketTimeRange(user, date, ticket.id).end + ')'"
                           >
                             <span class="flex-shrink-0 mr-1 text-left font-bold">
@@ -482,5 +482,51 @@ const isUserCurrentlyWorking = (user: string) => {
   @apply text-sm px-2 py-1 rounded-md;
   @apply bg-orange-100 dark:bg-orange-900/30;
   @apply text-orange-800 dark:text-orange-200;
+}
+
+.goal-met {
+  background-color: v-bind('settingsStore.goalColors.light.goalMet.color');
+  color: v-bind('settingsStore.goalColors.light.textColor');
+}
+.dark .goal-met {
+  background-color: v-bind('settingsStore.goalColors.dark.goalMet.color');
+  color: v-bind('settingsStore.goalColors.dark.textColor');
+}
+
+.goal-partial {
+  background-color: v-bind('settingsStore.goalColors.light.goalPartial.color');
+  color: v-bind('settingsStore.goalColors.light.textColor');
+}
+.dark .goal-partial {
+  background-color: v-bind('settingsStore.goalColors.dark.goalPartial.color');
+  color: v-bind('settingsStore.goalColors.dark.textColor');
+}
+
+.goal-missed {
+  background-color: v-bind('settingsStore.goalColors.light.goalMissed.color');
+  color: v-bind('settingsStore.goalColors.light.textColor');
+}
+.dark .goal-missed {
+  background-color: v-bind('settingsStore.goalColors.dark.goalMissed.color');
+  color: v-bind('settingsStore.goalColors.dark.textColor');
+}
+
+.weekend-no-time {
+  background-color: v-bind('settingsStore.goalColors.light.weekendNoTime.color');
+  color: v-bind('settingsStore.goalColors.light.textColor');
+}
+.dark .weekend-no-time {
+  background-color: v-bind('settingsStore.goalColors.dark.weekendNoTime.color');
+  color: v-bind('settingsStore.goalColors.dark.textColor');
+}
+
+.time-chip {
+  background-color: v-bind('settingsStore.chipColors.light.background');
+  color: v-bind('settingsStore.chipColors.light.text');
+}
+
+.dark .time-chip {
+  background-color: v-bind('settingsStore.chipColors.dark.background');
+  color: v-bind('settingsStore.chipColors.dark.text');
 }
 </style>

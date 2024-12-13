@@ -22,6 +22,48 @@ interface SettingsState {
   calendarUpdateInterval: number
   visibleDays: number
   hideWeekends: boolean
+  goalColors: {
+    light: {
+      textColor: string
+      goalMet: {
+        color: string
+      }
+      goalPartial: {
+        color: string
+      }
+      goalMissed: {
+        color: string
+      }
+      weekendNoTime: {
+        color: string
+      }
+    }
+    dark: {
+      textColor: string
+      goalMet: {
+        color: string
+      }
+      goalPartial: {
+        color: string
+      }
+      goalMissed: {
+        color: string
+      }
+      weekendNoTime: {
+        color: string
+      }
+    }
+  }
+  chipColors: {
+    light: {
+      background: string
+      text: string
+    }
+    dark: {
+      background: string
+      text: string
+    }
+  }
 }
 
 export const useSettingsStore = defineStore('settings', {
@@ -46,7 +88,49 @@ export const useSettingsStore = defineStore('settings', {
     },
     calendarUpdateInterval: 6,
     visibleDays: 7,
-    hideWeekends: false
+    hideWeekends: false,
+    goalColors: {
+      light: {
+        textColor: '#374151',
+        goalMet: {
+          color: '#adf0cd',
+        },
+        goalPartial: {
+          color: '#fbbf24',
+        },
+        goalMissed: {
+          color: '#fca5a5',
+        },
+        weekendNoTime: {
+          color: '#f9fafb',
+        }
+      },
+      dark: {
+        textColor: '#f5f5f5',
+        goalMet: {
+          color: '#277c48',
+        },
+        goalPartial: {
+          color: '#9a7c28',
+        },
+        goalMissed: {
+          color: '#762828',
+        },
+        weekendNoTime: {
+          color: '#111827',
+        }
+      }
+    },
+    chipColors: {
+      light: {
+        background: '#6bdbc7',
+        text: '#2f504a'
+      },
+      dark: {
+        background: '#52b7a6',
+        text: '#12352f'
+      }
+    }
   }),
 
   actions: {
@@ -115,6 +199,38 @@ export const useSettingsStore = defineStore('settings', {
 
     setHideWeekends(hide: boolean) {
       this.hideWeekends = hide
+    },
+
+    resetGoalColors() {
+      this.goalColors = {
+        light: {
+          textColor: '#374151',
+          goalMet: { color: '#adf0cd' },
+          goalPartial: { color: '#fbbf24' },
+          goalMissed: { color: '#fca5a5' },
+          weekendNoTime: { color: '#f9fafb' }
+        },
+        dark: {
+          textColor: '#f5f5f5',
+          goalMet: { color: '#277c48' },
+          goalPartial: { color: '#9a7c28' },
+          goalMissed: { color: '#762828' },
+          weekendNoTime: { color: '#111827' }
+        }
+      }
+    },
+
+    resetChipColors() {
+      this.chipColors = {
+        light: {
+          background: '#6bdbc7',
+          text: '#2f504a'
+        },
+        dark: {
+          background: '#52b7a6',
+          text: '#12352f'
+        }
+      }
     }
   },
 

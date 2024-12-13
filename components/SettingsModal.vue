@@ -1,16 +1,28 @@
 <template>
   <div v-if="isOpen" class="no-select fixed inset-0 z-50 overflow-y-auto">
     <!-- Backdrop -->
-    <div class="fixed inset-0 transition-opacity" @click="close">
+    <div 
+      class="fixed inset-0 transition-opacity duration-300" 
+      :class="{ 'backdrop-transparent': isTableSettings }"
+      @click="close"
+    >
       <div class="backdrop"></div>
       <div class="backdrop-edge"></div>
     </div>
 
     <!-- Modal -->
-    <div class="flex min-h-screen items-center justify-center p-4">
-      <div class="relative bg-light-surface dark:bg-gray-900 rounded-lg shadow-xl max-w-4xl w-full">
-        <!-- Header -->
-        <div class="flex items-center justify-between p-4 border-b border-light-border dark:border-gray-600">
+    <div class="fixed inset-0 p-4 pointer-events-none">
+      <div 
+        ref="modalRef"
+        :style="{ transform: `translate(${position.x}px, ${position.y}px)` }"
+        class="absolute bg-light-surface dark:bg-gray-900 rounded-lg shadow-xl max-w-4xl w-full pointer-events-auto"
+        style="top: 0; left: 0;"
+      >
+        <!-- Header - Make it draggable -->
+        <div 
+          @mousedown="startDrag"
+          class="flex items-center justify-between p-4 border-b border-light-border dark:border-gray-600 drag-handle"
+        >
           <h3 class="text-lg font-semibold text-light-text-primary dark:text-white">
             Settings
           </h3>
@@ -126,7 +138,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { useSettingsStore } from '~/stores/settings'
 import GeneralSettings from './settings/GeneralSettings.vue'
 import BoardSettings from './settings/BoardSettings.vue'
@@ -146,6 +158,7 @@ const emit = defineEmits(['close'])
 
 const settingsStore = useSettingsStore()
 const selectedMenu = computed(() => settingsStore.selectedMenu)
+const isTableSettings = computed(() => selectedMenu.value === 'table')
 
 const close = () => {
   // Reset selected menu to default
@@ -153,6 +166,83 @@ const close = () => {
   // Emit close event to parent
   emit('close')
 }
+
+const modalRef = ref<HTMLElement | null>(null)
+const isDragging = ref(false)
+const position = ref({ x: 0, y: 0 })
+const dragOffset = ref({ x: 0, y: 0 })
+
+const initializePosition = () => {
+  if (!modalRef.value) return
+  
+  const modalWidth = modalRef.value.offsetWidth
+  const modalHeight = modalRef.value.offsetHeight
+  
+  // Calculate center position relative to viewport
+  position.value = {
+    x: (window.innerWidth - modalWidth) / 2,
+    y: (window.innerHeight - modalHeight) / 2
+  }
+}
+
+const startDrag = (event: MouseEvent) => {
+  if (!modalRef.value) return
+  
+  isDragging.value = true
+  
+  // Get current transform values
+  const currentTransform = window.getComputedStyle(modalRef.value).transform
+  const matrix = new DOMMatrix(currentTransform)
+  const currentX = matrix.m41
+  const currentY = matrix.m42
+  
+  // Set initial position to current transform
+  position.value = {
+    x: currentX,
+    y: currentY
+  }
+  
+  // Calculate offset from current mouse position
+  dragOffset.value = {
+    x: event.clientX - currentX,
+    y: event.clientY - currentY
+  }
+  
+  document.addEventListener('mousemove', onDrag)
+  document.addEventListener('mouseup', stopDrag)
+}
+
+const onDrag = (event: MouseEvent) => {
+  if (!isDragging.value || !modalRef.value) return
+  
+  // Calculate new position
+  position.value = {
+    x: event.clientX - dragOffset.value.x,
+    y: event.clientY - dragOffset.value.y
+  }
+}
+
+const stopDrag = () => {
+  isDragging.value = false
+  document.removeEventListener('mousemove', onDrag)
+  document.removeEventListener('mouseup', stopDrag)
+}
+
+// Watch for modal opening
+watch(() => props.isOpen, (newValue) => {
+  if (newValue) {
+    position.value = { x: 0, y: 0 } // Reset position first
+    nextTick(() => {
+      initializePosition()
+    })
+  }
+})
+
+// Clean up event listeners
+onBeforeUnmount(() => {
+  document.removeEventListener('mousemove', onDrag)
+  document.removeEventListener('mouseup', stopDrag)
+})
 </script>
 
 <style scoped>
@@ -163,12 +253,23 @@ const close = () => {
   background:hsl(0deg 0% 100% / 0.1);
   pointer-events: none;
   backdrop-filter: blur(16px);
+  transition: all 0.3s ease;
   mask-image: linear-gradient(
     to bottom,
     black 0,
     black 50%,
     transparent 50%
   );
+}
+
+.backdrop-transparent .backdrop {
+  background: transparent;
+  backdrop-filter: none;
+}
+
+.backdrop-transparent .backdrop-edge {
+  background: transparent;
+  backdrop-filter: none;
 }
 
 .backdrop-edge {
@@ -180,6 +281,7 @@ const close = () => {
   background: rgb(0 0 0 / 0.15);
   backdrop-filter: blur(8px) brightness(120%);
   pointer-events: none;
+  transition: all 0.3s ease;
   mask-image: linear-gradient(
     to bottom,
     black 0,
@@ -195,5 +297,11 @@ const close = () => {
 
 :global(.dark) .backdrop-edge {
   background: rgb(255 255 255 / 0.03);
+}
+
+/* Add this to prevent text selection while dragging */
+.drag-handle {
+  cursor: pointer;
+  user-select: none;
 }
 </style>

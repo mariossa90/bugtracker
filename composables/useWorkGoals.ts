@@ -36,11 +36,11 @@ export const useWorkGoals = () => {
 
   const getGoalStatusClass = (status: GoalStatus): string => {
     const classes = {
-      'GOAL_MET': 'bg-teal-100 dark:bg-teal-500/20 text-gray-600 dark:text-gray-300',
-      'GOAL_PARTIAL': 'bg-yellow-400/30 dark:bg-sky-900/40 text-gray-600 dark:text-gray-300',
-      'GOAL_MISSED': 'bg-red-300/40 dark:bg-red-900/30 text-gray-600 dark:text-gray-300',
+      'GOAL_MET': 'goal-met',
+      'GOAL_PARTIAL': 'goal-partial',
+      'GOAL_MISSED': 'goal-missed',
       'GOAL_NOT_SET': '',
-      'WEEKEND_NO_TIME': 'bg-gray-50 dark:bg-gray-900/20 text-gray-600 dark:text-gray-300'
+      'WEEKEND_NO_TIME': 'weekend-no-time'
     }
     return classes[status]
   }
