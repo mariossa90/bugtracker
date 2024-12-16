@@ -209,7 +209,6 @@ import SettingsModal from '~/components/SettingsModal.vue'
 import AutoUpdateCountdown from '~/components/AutoUpdateCountdown.vue'
 import CurrentDateTime from '~/components/CurrentDateTime.vue'
 import ApiResponseTime from '~/components/ApiResponseTime.vue'
-import CustomDatePicker from '~/components/CustomDatePicker.vue'
 import { useFullscreen } from '~/composables/useFullscreen'
 import { useCalendarStore } from '~/stores/calendar'
 

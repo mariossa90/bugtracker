@@ -1,10 +1,10 @@
 <template>
   <div class="no-select daily-time-list">
     <div class="bg-light-surface dark:bg-gray-800 rounded-xl p-6">
-      <div class="flex justify-end mb-4">
-        <CustomDatePicker />
+      <div v-if="!selectedUser" class="flex items-center justify-center h-32 text-gray-500 dark:text-gray-400">
+        Please select a user to view their time tracking data
       </div>
-      <div class="overflow-x-auto -mx-6 custom-scrollbar">
+      <div v-else-if="selectedUser" class="overflow-x-auto -mx-6 custom-scrollbar">
         <div class="inline-block min-w-full align-middle">
           <div class="overflow-hidden px-4 relative">
             <table class="min-w-full rounded-lg border dark:border-gray-700 overflow-hidden">
@@ -211,25 +211,44 @@ const { calculateGoalStatus, getGoalStatusClass, formatGoalProgress, durationToH
 const { formatUserName } = useUserName()
 const absenceStore = useAbsenceStore()
 
-// Initialize selectedDate with start of day
-const today = new Date()
-today.setHours(0, 0, 0, 0)
-const selectedDate = ref(today)
+const props = defineProps<{
+  selectedUser: string | null
+  selectedDate: Date
+  selectedPeriod: 'daily' | 'weekly' | 'monthly' | 'total'
+}>()
 
 const expandedRow = ref<string | null>(null)
 
 const isLoading = computed(() => mondayStore.loading);
 
-
+const selectedUser = computed(() => props.selectedUser)
 
 const lastSevenDays = computed(() => {
+  if (!props.selectedDate) return []
+  
   const dates = []
-  const startDate = new Date(settingsStore.selectedDate)
+  const startDate = new Date(props.selectedDate)
   startDate.setHours(0, 0, 0, 0)
   
   let i = 0
   let daysAdded = 0
-  while (daysAdded < settingsStore.visibleDays) {
+  
+  // If period is 'total', get all available dates from dailyTimeStore
+  if (props.selectedPeriod === 'total') {
+    const allDates = dailyTimeStore.getDailyTimes
+      .filter(item => item.userName === props.selectedUser)
+      .map(item => formatDate(item.date))
+      .sort((a, b) => new Date(b).getTime() - new Date(a).getTime()) // Sort descending
+    return allDates
+  }
+  
+  const daysToShow = {
+    daily: 1,
+    weekly: 7,
+    monthly: 30,
+  }[props.selectedPeriod]
+  
+  while (daysAdded < daysToShow) {
     const date = new Date(startDate)
     date.setDate(date.getDate() - i)
     
@@ -252,8 +271,11 @@ const lastSevenDays = computed(() => {
 })
 
 const uniqueUsers = computed(() => {
+  if (!selectedUser.value) return []
+  
   const users = dailyTimeStore.getUniqueUsers
-  return users.filter(user => settingsStore.isUserVisible(user))
+  const filteredUsers = users.filter(user => settingsStore.isUserVisible(user))
+  return filteredUsers.filter(user => user === selectedUser.value)
 })
 
 const getDailyEntries = (user: string, date: string) => {

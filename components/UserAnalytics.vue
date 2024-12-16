@@ -240,6 +240,14 @@
         </div>
       </div>
     </div>
+
+    <div class="mt-8">
+      <UserTimeList 
+        :selected-user="selectedUser"
+        :selected-date="selectedDate"
+        :selected-period="selectedPeriod"
+      />
+    </div>
   </div>
 </template>
 
@@ -253,6 +261,7 @@ import { useUserName } from '~/composables/useUserName'
 import { useUserAnalytics, type PeriodType } from '~/composables/useUserAnalytics'
 import Chart from 'primevue/chart'
 import Calendar from 'primevue/calendar'
+import UserTimeList from '~/components/UserTimeList.vue'
 
 const mondayStore = useMondayStore()
 const settingsStore = useSettingsStore()
