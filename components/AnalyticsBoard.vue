@@ -77,11 +77,13 @@
 import { computed, ref } from 'vue'
 import { useMondayStore } from '~/stores/monday'
 import { useSettingsStore } from '~/stores/settings'
+import { useDailyTimeStore } from '~/stores/dailyTime'
 import Chart from 'primevue/chart'
 import Calendar from 'primevue/calendar'
 
 const mondayStore = useMondayStore()
 const settingsStore = useSettingsStore()
+const dailyTimeStore = useDailyTimeStore()
 
 type PeriodType = 'daily' | 'weekly' | 'monthly' | 'total'
 
@@ -162,11 +164,17 @@ const filteredProjectStats = computed(() => {
   const range = dateRange.value
   const isTotal = selectedPeriod.value === 'total'
 
+  // First calculate task statistics
   mondayStore.boards.forEach(board => {
     board.tasks.forEach(task => {
       const projectColumn = task.columnValues.find(cv => cv.id === 'project8__1')
       const projectName = projectColumn?.text || 'No Project'
       
+      // Initialize project stats if not exists
+      if (!stats.has(projectName)) {
+        stats.set(projectName, { total: 0, completed: 0, timeTracked: 0 })
+      }
+
       const statusColumn = task.columnValues.find(cv => cv.id === 'status')
       const isCompleted = statusColumn?.text === 'Done'
       
@@ -183,30 +191,13 @@ const filteredProjectStats = computed(() => {
         }
       }
 
-      // Initialize project stats if not exists
-      if (!stats.has(projectName)) {
-        stats.set(projectName, { total: 0, completed: 0, timeTracked: 0 })
-      }
-
-      const projectStat = stats.get(projectName)!
-
       // Only count tasks in task statistics if they meet completion criteria
       if (isTotal || (isCompleted && completionDate && range && completionDate >= range.start && completionDate <= range.end)) {
-        projectStat.total++
+        stats.get(projectName)!.total++
         if (isCompleted) {
-          projectStat.completed++
+          stats.get(projectName)!.completed++
         }
       }
-
-      // Always sum up time tracking regardless of completion status
-      const timeColumns = task.columnValues.filter(cv => 
-        ['zeiterfassung5__1', 'zeiterfassung__1'].includes(cv.id)
-      )
-      timeColumns.forEach(timeColumn => {
-        if (timeColumn.duration) {
-          projectStat.timeTracked += timeColumn.duration
-        }
-      })
 
       // Process subitems if they exist
       task.subitems?.forEach(subitem => {
@@ -228,23 +219,44 @@ const filteredProjectStats = computed(() => {
 
         // Only count subitems in task statistics if they meet completion criteria
         if (isTotal || (isSubitemCompleted && subitemCompletionDate && range && subitemCompletionDate >= range.start && subitemCompletionDate <= range.end)) {
-          projectStat.total++
+          stats.get(projectName)!.total++
           if (isSubitemCompleted) {
-            projectStat.completed++
+            stats.get(projectName)!.completed++
           }
         }
-
-        // Always sum up subitem time tracking regardless of completion status
-        const subitemTimeColumns = subitem.column_values.filter(cv => 
-          cv.id === 'zeiterfassung__1'
-        )
-        subitemTimeColumns.forEach(timeColumn => {
-          if (timeColumn.duration) {
-            projectStat.timeTracked += timeColumn.duration
-          }
-        })
       })
     })
+  })
+
+  // Now calculate time tracking separately using dailyTimeStore
+  const dailyTimes = dailyTimeStore.getDailyTimes
+  dailyTimes.forEach(dailyTime => {
+    if (isTotal || (range && 
+        new Date(dailyTime.date) >= range.start && 
+        new Date(dailyTime.date) <= range.end)) {
+      
+      dailyTime.entries.forEach(entry => {
+        // Get project name from task ID
+        const task = mondayStore.boards
+          .flatMap(board => board.tasks)
+          .find(t => t.id === entry.ticketId)
+        
+        if (task) {
+          const projectColumn = task.columnValues.find(cv => cv.id === 'project8__1')
+          const projectName = projectColumn?.text || 'No Project'
+          
+          // Initialize project stats if not exists
+          if (!stats.has(projectName)) {
+            stats.set(projectName, { total: 0, completed: 0, timeTracked: 0 })
+          }
+          
+          // Add duration to project's time tracked
+          const [hours, minutes, seconds] = entry.duration.split(':').map(Number)
+          const durationInSeconds = (hours * 3600) + (minutes * 60) + seconds
+          stats.get(projectName)!.timeTracked += durationInSeconds
+        }
+      })
+    }
   })
 
   return stats
