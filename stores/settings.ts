@@ -64,6 +64,8 @@ interface SettingsState {
       text: string
     }
   }
+  boardUpdatePassword: string | null
+  hasEnteredPassword: boolean
 }
 
 export const useSettingsStore = defineStore('settings', {
@@ -130,7 +132,9 @@ export const useSettingsStore = defineStore('settings', {
         background: '#52b7a6',
         text: '#12352f'
       }
-    }
+    },
+    boardUpdatePassword: 'Woojin2544', // Set your default password here
+    hasEnteredPassword: false
   }),
 
   actions: {
@@ -229,6 +233,22 @@ export const useSettingsStore = defineStore('settings', {
           text: '#12352f'
         }
       }
+    },
+
+    validatePassword(password: string): boolean {
+      if (password === this.boardUpdatePassword) {
+        this.hasEnteredPassword = true
+        return true
+      }
+      return false
+    },
+
+    setPassword(newPassword: string) {
+      this.boardUpdatePassword = newPassword
+    },
+
+    resetPasswordStatus() {
+      this.hasEnteredPassword = false
     }
   },
 
@@ -238,7 +258,8 @@ export const useSettingsStore = defineStore('settings', {
     },
     isProjectVisible: (state) => (projectName: string) => {
       return !state.hiddenProjects.includes(projectName)
-    }
+    },
+    canUpdateBoard: (state) => state.hasEnteredPassword
   },
   persist: true
 })

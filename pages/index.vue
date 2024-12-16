@@ -265,6 +265,15 @@ const activeBoard = ref('time-tracking')
 const isCalendarLoading = ref(false)
 
 const fetchBoardData = async () => {
+  if (!settingsStore.canUpdateBoard) {
+    // Show password prompt dialog
+    const password = await prompt('Enter password to update board:')
+    if (!password || !settingsStore.validatePassword(password)) {
+      error.value = 'Invalid password'
+      return
+    }
+  }
+
   isLoading.value = true
   isCalendarLoading.value = false
   error.value = null
