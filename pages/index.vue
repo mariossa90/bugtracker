@@ -135,15 +135,27 @@
 
             <!-- Main content area -->
             <div class="flex-1 min-w-0">
-              <div v-if="activeBoard === 'time-tracking'" class="w-full">
-                <DailyTimeList :items="allItems" />
-              </div>
-              <div v-else-if="activeBoard === 'analytics'" class="w-full">
-                <AnalyticsBoard />
-              </div>
-              <div v-else-if="activeBoard === 'user-analytics'" class="w-full">
-                <UserAnalytics />
-              </div>
+              <Transition
+                mode="out-in"
+                enter-active-class="transition-opacity duration-200 ease-out"
+                enter-from-class="opacity-0"
+                enter-to-class="opacity-100"
+                leave-active-class="transition-opacity duration-200 ease-in"
+                leave-from-class="opacity-100"
+                leave-to-class="opacity-0"
+              >
+                <KeepAlive>
+                  <div v-if="activeBoard === 'time-tracking'" class="w-full">
+                    <DailyTimeList :items="allItems" />
+                  </div>
+                  <div v-else-if="activeBoard === 'analytics'" class="w-full">
+                    <AnalyticsBoard />
+                  </div>
+                  <div v-else-if="activeBoard === 'user-analytics'" class="w-full">
+                    <UserAnalytics />
+                  </div>
+                </KeepAlive>
+              </Transition>
             </div>
           </div>
         </div>
