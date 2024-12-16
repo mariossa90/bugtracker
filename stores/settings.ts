@@ -13,13 +13,6 @@ interface SettingsState {
   selectedMenu: 'general' | 'boards' | 'userVisibility' | 'userGoal' | 'analytics' | 'table'
   hiddenProjects: string[]
   enableGoalEmails: boolean
-  analyticsVisibility: {
-    tasksBarChart: boolean
-    tasksPieChart: boolean
-    timeBarChart: boolean
-    timePieChart: boolean
-    taskDetails: boolean
-  }
   calendarUpdateInterval: number
   visibleDays: number
   hideWeekends: boolean
@@ -87,13 +80,6 @@ export const useSettingsStore = defineStore('settings', {
     selectedMenu: 'general', // Default selected menu
     hiddenProjects: [], // Initialize empty hidden projects array
     enableGoalEmails: true,
-    analyticsVisibility: {
-      tasksBarChart: true,
-      tasksPieChart: true,
-      timeBarChart: true,
-      timePieChart: true,
-      taskDetails: true
-    },
     calendarUpdateInterval: 6,
     visibleDays: 7,
     hideWeekends: false,
@@ -197,10 +183,6 @@ export const useSettingsStore = defineStore('settings', {
       } else {
         this.hiddenProjects.push(projectName)
       }
-    },
-
-    toggleAnalyticsVisibility(element: keyof SettingsState['analyticsVisibility']) {
-      this.analyticsVisibility[element] = !this.analyticsVisibility[element]
     },
 
     setCalendarUpdateInterval(hours: number) {

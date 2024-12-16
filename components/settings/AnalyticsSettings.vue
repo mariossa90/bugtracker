@@ -1,36 +1,5 @@
 <template>
   <div class="space-y-4">
-    <div class="mb-8">
-      <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Chart Visibility</h3>
-      <div class="grid grid-cols-2 gap-4">
-        <div 
-          v-for="(label, key) in visibilityOptions" 
-          :key="key"
-          class="flex items-center justify-between px-4 py-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors duration-200 cursor-pointer"
-          @click="toggleVisibility(key)"
-        >
-          <span class="text-gray-700 dark:text-gray-300">{{ label }}</span>
-          <button
-            type="button"
-            role="switch"
-            :aria-checked="settingsStore.analyticsVisibility[key]"
-            @click.stop="toggleVisibility(key)"
-            class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#5bbcaa] focus:ring-offset-2"
-            :class="[
-              settingsStore.analyticsVisibility[key]
-                ? 'bg-[#5bbcaa]'
-                : 'bg-gray-200 dark:bg-gray-700'
-            ]"
-          >
-            <span 
-              class="pointer-events-none relative inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
-              :class="settingsStore.analyticsVisibility[key] ? 'translate-x-5' : 'translate-x-0'"
-            ></span>
-          </button>
-        </div>
-      </div>
-    </div>
-
     <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Project Visibility</h3>
     
     <div class="grid grid-cols-2 gap-4">
@@ -96,18 +65,6 @@ import { useMondayStore } from '~/stores/monday'
 
 const settingsStore = useSettingsStore()
 const mondayStore = useMondayStore()
-
-const visibilityOptions = {
-  tasksBarChart: 'Tasks Bar Chart',
-  tasksPieChart: 'Tasks Distribution Pie Chart',
-  timeBarChart: 'Time Bar Chart',
-  timePieChart: 'Time Distribution Pie Chart',
-  taskDetails: 'Task Details Panel'
-}
-
-const toggleVisibility = (key: keyof typeof visibilityOptions) => {
-  settingsStore.toggleAnalyticsVisibility(key)
-}
 
 // Get unique project names from all tasks
 const availableProjects = computed(() => {

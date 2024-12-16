@@ -90,48 +90,109 @@
     <!-- User Tasks Charts -->
     <div class="mt-8 grid grid-cols-[2fr,1fr,1fr] gap-8">
       <!-- Left Column (Bar Charts) -->
-      <div class="space-y-8" ref="chartsColumn">
-        <!-- Tasks Bar Chart -->
-        <div v-if="settingsStore.analyticsVisibility.tasksBarChart">
-          <h3 class="text-lg font-medium text-gray-800 dark:text-gray-200 mb-4">Assigned Tasks</h3>
+      <div ref="chartsColumn">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-medium text-gray-800 dark:text-gray-200">
+            {{ showTimeChart ? 'Time Tracked' : 'Assigned Tasks' }}
+          </h3>
+          <button 
+            @click="showTimeChart = !showTimeChart"
+            class="px-3 py-1.5 text-sm font-medium rounded-lg transition-colors flex items-center gap-2
+              text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700/50 border border-gray-200 dark:border-gray-600"
+          >
+            <i class="fas" :class="showTimeChart ? 'fa-tasks' : 'fa-clock'"></i>
+            {{ showTimeChart ? 'Show Tasks' : 'Show Time' }}
+          </button>
+        </div>
+        
+        <!-- Combined Chart Container -->
+        <div class="bg-gray-50 dark:bg-gray-800/70 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
           <div v-if="selectedUser" class="bg-gray-50 dark:bg-gray-800/70 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
             <Chart 
+              v-if="!showTimeChart"
               type="bar" 
               :data="tasksChartData" 
               :options="tasksChartOptions" 
               class="h-[400px]" 
             />
-          </div>
-          <div v-else class="h-[400px] flex items-center justify-center text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/70 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
-            Please select a user to view their tasks
-          </div>
-        </div>
-        
-        <!-- Time Bar Chart -->
-        <div v-if="settingsStore.analyticsVisibility.timeBarChart">
-          <h3 class="text-lg font-medium text-gray-800 dark:text-gray-200 mb-4">Time Tracked</h3>
-          <div v-if="selectedUser" class="bg-gray-50 dark:bg-gray-800/70 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
             <Chart 
+              v-if="showTimeChart"
               type="bar" 
               :data="timeChartData" 
               :options="timeChartOptions" 
               class="h-[400px]" 
             />
           </div>
-          <div v-else class="h-[400px] flex items-center justify-center text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/70 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
-            Please select a user to view their time tracking
+          <div v-else class="h-[400px] flex items-center justify-center text-gray-500 dark:text-gray-400">
+            Please select a user to view their {{ showTimeChart ? 'time tracking' : 'tasks' }}
           </div>
         </div>
       </div>
 
-      <!-- Middle Column -->
-      <div v-if="settingsStore.analyticsVisibility.taskDetails">
+      <!-- Middle Column (Pie Charts) -->
+      <div>
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-medium text-gray-800 dark:text-gray-200">
+            {{ showTimePieChart ? 'Time Distribution' : 'Tasks Distribution' }}
+          </h3>
+          <button 
+            @click="showTimePieChart = !showTimePieChart"
+            class="px-3 py-1.5 text-sm font-medium rounded-lg transition-colors flex items-center gap-2
+              text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700/50 border border-gray-200 dark:border-gray-600"
+          >
+            <i class="fas" :class="showTimePieChart ? 'fa-tasks' : 'fa-clock'"></i>
+            {{ showTimePieChart ? 'Show Tasks' : 'Show Time' }}
+          </button>
+        </div>
+        
+        <!-- Combined Pie Chart Container -->
+        <div class="bg-gray-50 dark:bg-gray-800/70 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+          <div v-if="selectedUser" class="bg-gray-50 dark:bg-gray-800/70 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+            <Chart 
+              v-if="!showTimePieChart"
+              type="pie" 
+              :data="tasksPieChartData" 
+              :options="pieChartOptions" 
+              class="h-full w-full min-h-[400px]" 
+            />
+            <Chart 
+              v-if="showTimePieChart"
+              type="pie" 
+              :data="timePieChartData" 
+              :options="timePieChartOptions" 
+              class="h-full w-full min-h-[400px]" 
+            />
+          </div>
+          <div v-else class="h-[400px] flex items-center justify-center text-gray-500 dark:text-gray-400">
+            Please select a user to view their {{ showTimePieChart ? 'time' : 'tasks' }} distribution
+          </div>
+        </div>
+      </div>
+
+      <!-- Task Details Column -->
+      <div>
         <h3 class="text-lg font-medium text-gray-800 dark:text-gray-200 mb-4">Task Details</h3>
         <div 
           class="bg-gray-50 dark:bg-gray-800/70 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm overflow-auto"
           :style="{ height: chartsHeight + 'px' }"
         >
           <div v-if="selectedUser" class="space-y-2">
+            <!-- Summary Section -->
+            <div class="mb-6 grid grid-cols-2 gap-4">
+              <div class="bg-[#5bbcaa]/10 dark:bg-[#5bbcaa]/20 rounded-lg p-4">
+                <div class="text-sm text-gray-600 dark:text-gray-400">Total Time</div>
+                <div class="text-xl font-semibold text-[#5bbcaa]">
+                  {{ formatTime(getTotalTimeTracked()) }}
+                </div>
+              </div>
+              <div class="bg-[#5bbcaa]/10 dark:bg-[#5bbcaa]/20 rounded-lg p-4">
+                <div class="text-sm text-gray-600 dark:text-gray-400">Total Tasks</div>
+                <div class="text-xl font-semibold text-[#5bbcaa]">
+                  {{ getTotalTasks() }}
+                </div>
+              </div>
+            </div>
+            
             <div v-for="[project, tasks] in projectTasks" :key="project" class="border border-gray-200 dark:border-gray-600 rounded-lg">
               <!-- Project Header -->
               <button 
@@ -207,35 +268,6 @@
           </div>
           <div v-else class="h-full flex items-center justify-center text-gray-500 dark:text-gray-400">
             Please select a user to view their tasks
-          </div>
-        </div>
-      </div>
-
-      <!-- Right Column (Pie Charts) -->
-      <div class="space-y-8">
-        <!-- Tasks Pie Chart -->
-        <div v-if="settingsStore.analyticsVisibility.tasksPieChart">
-          <h3 class="text-lg font-medium text-gray-800 dark:text-gray-200 mb-4">Tasks Distribution</h3>
-          <div v-if="selectedUser" class="bg-gray-50 dark:bg-gray-800/70 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
-            <Chart 
-              type="pie" 
-              :data="tasksPieChartData" 
-              :options="pieChartOptions" 
-              class="h-full w-full min-h-[400px]" 
-            />
-          </div>
-        </div>
-        
-        <!-- Time Pie Chart -->
-        <div v-if="settingsStore.analyticsVisibility.timePieChart">
-          <h3 class="text-lg font-medium text-gray-800 dark:text-gray-200 mb-4">Time Distribution</h3>
-          <div v-if="selectedUser" class="bg-gray-50 dark:bg-gray-800/70 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
-            <Chart 
-              type="pie" 
-              :data="timePieChartData" 
-              :options="timePieChartOptions" 
-              class="h-full w-full min-h-[400px]" 
-            />
           </div>
         </div>
       </div>
@@ -416,5 +448,25 @@ const copyToClipboard = async (text: string) => {
 const openMondayTask = (boardId: string, taskId: string) => {
   const url = `https://woojin-world.monday.com/boards/${boardId}/pulses/${taskId}`
   window.open(url, '_blank')
+}
+
+const showTimeChart = ref(false)
+const showTimePieChart = ref(false)
+
+// Add these helper functions
+const getTotalTimeTracked = () => {
+  let totalTime = 0
+  for (const [_, tasks] of projectTasks.value) {
+    totalTime += getProjectTotalTime(tasks)
+  }
+  return totalTime
+}
+
+const getTotalTasks = () => {
+  let totalTasks = 0
+  for (const [_, tasks] of projectTasks.value) {
+    totalTasks += tasks.length
+  }
+  return totalTasks
 }
 </script> 
