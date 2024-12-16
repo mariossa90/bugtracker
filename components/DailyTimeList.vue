@@ -1,190 +1,177 @@
 <template>
   <div class="no-select daily-time-list">
-    <div class="bg-light-surface dark:bg-gray-800 rounded-xl p-6 h-full">
+    <div class="bg-light-surface dark:bg-gray-800 rounded-xl p-6 flex flex-col h-full">
       <div class="flex justify-end mb-4">
         <CustomDatePicker />
       </div>
-      <div class="overflow-hidden h-[calc(100%-4rem)]">
-        <div class="inline-block min-w-full align-middle">
-          <div class="overflow-auto custom-scrollbar px-4 relative">
-            <table class="min-w-full rounded-lg border dark:border-gray-700 overflow-hidden">
-              <!-- Loading overlay -->
-              <tbody>
-                <tr v-if="isLoading" class="absolute top-0 left-4 right-4 bottom-0 z-50">
-                  <td colspan="100%" class="h-full rounded-lg overflow-hidden">
-                    <div class="absolute inset-0 flex items-center justify-center">
-                      <div class="loading-backdrop rounded-lg"></div>
-                      <div class="loading-backdrop-edge rounded-lg"></div>
-                      <div class="relative z-10 flex flex-col items-center gap-3">
-                        <i class="fas fa-circle-notch fa-spin fa-2x text-[#5bbcaa]"></i>
-                        <span class="text-sm font-medium text-[#5bbcaa]">Updating data...</span>
+      <div class="flex-1 relative">
+        <div class="absolute inset-0">
+          <table class="min-w-full border dark:border-gray-700">
+            <thead class="bg-[#eef8f6] dark:bg-[#293c39] sticky top-0 z-10">
+              <tr>
+                <th class="h-12 px-2 text-center text-sm font-semibold text-light-text-primary dark:text-white sticky left-0 bg-[#5bbcaa]/5 dark:bg-[#5bbcaa]/10 uppercase whitespace-nowrap w-[180px]">
+                  USER
+                </th>
+                <th v-for="date in lastSevenDays" 
+                    :key="date" 
+                    class="h-12 px-2 text-center text-sm font-semibold text-light-text-primary dark:text-white bg-[#5bbcaa]/5 dark:bg-[#5bbcaa]/10 uppercase w-[260px]"
+                >
+                  {{ formatDateDisplay(date).toUpperCase() }}
+                </th>
+              </tr>
+            </thead>
+            <tbody class="[&>tr:last-child>td]:border-b dark:[&>tr:last-child>td]:border-gray-700">
+              <tr v-if="isLoading" class="absolute top-0 left-0 right-0 bottom-0 z-50">
+                <td colspan="100%" class="h-full rounded-lg overflow-hidden">
+                  <div class="absolute inset-0 flex items-center justify-center">
+                    <div class="loading-backdrop rounded-lg"></div>
+                    <div class="loading-backdrop-edge rounded-lg"></div>
+                    <div class="relative z-10 flex flex-col items-center gap-3">
+                      <i class="fas fa-circle-notch fa-spin fa-2x text-[#5bbcaa]"></i>
+                      <span class="text-sm font-medium text-[#5bbcaa]">Updating data...</span>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+              <template v-for="(user, index) in uniqueUsers" :key="user">
+                <tr class="group">
+                  <td class="h-12 py-4 pl-8 font-medium text-light-text-primary dark:text-white bg-gray-400/10 dark:bg-gray-900/70 border dark:border-gray-700">
+                    <div class="flex flex-col gap-1 w-[250px]">
+                      <div class="flex flex-col gap-2">
+                        <div class="flex items-center gap-2">
+                          <template v-if="settingsStore.showUserImages">
+                            <img 
+                              v-if="getUserImage(user)"
+                              :src="getUserImage(user)!"
+                              :alt="user"
+                              class="w-8 h-8 rounded-full flex-shrink-0"
+                            />
+                            <i v-else class="fas fa-user w-8 h-8 rounded-full flex-shrink-0 bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400"></i>
+                          </template>
+                          <span class="truncate">{{ formatUserName(user) }}</span>
+                        </div>
+                        
+                        <div v-if="getCurrentTask(user) && isUserCurrentlyWorking(user)" 
+                             class="truncate max-w-full"
+                        >
+                          <div class="text-sm px-2 py-0.5 rounded-full bg-[#5bbcaa]/10 text-[#5bbcaa] dark:bg-[#5bbcaa]/20 truncate"
+                               :title="getCurrentTask(user)"
+                          >
+                            {{ getCurrentTask(user) }}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </td>
-                </tr>
-              </tbody>
-              <thead class="bg-[#5bbcaa]/5 dark:bg-[#5bbcaa]/10">
-                <tr>
-                  <th class="h-12 px-2 text-center text-sm font-semibold text-light-text-primary dark:text-white sticky left-0 bg-[#5bbcaa]/5 dark:bg-[#5bbcaa]/10 uppercase whitespace-nowrap w-[180px]">
-                    USER
-                  </th>
-                  <th v-for="date in lastSevenDays" 
+                  <td v-for="date in lastSevenDays" 
                       :key="date" 
-                      class="h-12 px-2 text-center text-sm font-semibold text-light-text-primary dark:text-white bg-[#5bbcaa]/5 dark:bg-[#5bbcaa]/10 uppercase w-[260px]"
+                      class="h-12 py-4 px-2 text-center text-light-text-primary dark:text-gray-300 relative transition-opacity duration-200 group-hover:[&:not(:hover)]:opacity-80"
+                      :class="[
+                        isToday(date) ? 'border-t border-l border-b dark:border-gray-700' : [
+                          getAbsenceInfo(user, date) && getAbsenceInfo(user, date) !== 'Business Trip' 
+                            ? '' 
+                            : getGoalStatusClass(calculateGoalStatus(getDailyTotal(user, date), user, date)),
+                          'transition-colors duration-200'
+                        ]
+                      ]"
                   >
-                    {{ formatDateDisplay(date).toUpperCase() }}
-                  </th>
-                </tr>
-              </thead>
-              <tbody class="[&>tr:last-child>td]:border-b dark:[&>tr:last-child>td]:border-gray-700">
-                <template v-for="(user, index) in uniqueUsers" :key="user">
-                  <!-- User row -->
-                  <tr class="group">
-                    <td class="h-12 py-4 pl-8 font-medium text-light-text-primary dark:text-white bg-gray-400/10 dark:bg-gray-900/70 border dark:border-gray-700">
-                      <div class="flex flex-col gap-1 w-[250px]">
-                        <!-- User info group -->
-                        <div class="flex flex-col gap-2">
-                          <!-- User image and name row -->
-                          <div class="flex items-center gap-2">
-                            <template v-if="settingsStore.showUserImages">
-                              <img 
-                                v-if="getUserImage(user)"
-                                :src="getUserImage(user)!"
-                                :alt="user"
-                                class="w-8 h-8 rounded-full flex-shrink-0"
-                              />
-                              <i v-else class="fas fa-user w-8 h-8 rounded-full flex-shrink-0 bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400"></i>
-                            </template>
-                            <span class="truncate">{{ formatUserName(user) }}</span>
-                          </div>
-                          
-                          <!-- Current task chip row -->
-                          <div v-if="getCurrentTask(user) && isUserCurrentlyWorking(user)" 
-                               class="truncate max-w-full"
-                          >
-                            <div class="text-sm px-2 py-0.5 rounded-full bg-[#5bbcaa]/10 text-[#5bbcaa] dark:bg-[#5bbcaa]/20 truncate"
-                                 :title="getCurrentTask(user)"
-                            >
-                              {{ getCurrentTask(user) }}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td v-for="date in lastSevenDays" 
-                        :key="date" 
-                        class="h-12 py-4 px-2 text-center text-light-text-primary dark:text-gray-300 relative transition-opacity duration-200 group-hover:[&:not(:hover)]:opacity-80"
-                        :class="[
-                          isToday(date) ? 'border-t border-l border-b dark:border-gray-700' : [
-                            getAbsenceInfo(user, date) && getAbsenceInfo(user, date) !== 'Business Trip' 
-                              ? '' 
-                              : getGoalStatusClass(calculateGoalStatus(getDailyTotal(user, date), user, date)),
-                            'transition-colors duration-200'
-                          ]
-                        ]"
+                    <span v-if="getAbsenceInfo(user, date)" 
+                          class="absolute top-0 right-0 text-base px-4 py-0.5 rounded-bl-lg bg-blue-500 dark:bg-blue-600 text-white dark:text-white flex items-center gap-2 shadow-sm"
                     >
-                      <!-- Show absence badge if user is absent -->
-                      <span v-if="getAbsenceInfo(user, date)" 
-                            class="absolute top-0 right-0 text-base px-4 py-0.5 rounded-bl-lg bg-blue-500 dark:bg-blue-600 text-white dark:text-white flex items-center gap-2 shadow-sm"
-                      >
-                        <i v-if="getAbsenceInfo(user, date) === 'Sick Leave'" 
-                        class="fa-solid fa-house-medical"> 
-                        </i> 
-                        <i v-if="getAbsenceInfo(user, date) === 'Vacation'" 
-                           class="fa-solid fa-umbrella-beach">
-                        </i>
-                        <i v-if="getAbsenceInfo(user, date) === 'Business Trip'" 
-                           class="fa-solid fa-plane-departure">
-                        </i>
-                        {{ getAbsenceInfo(user, date) }}
-                      </span>
-                      
-                      <div class="flex flex-col items-center justify-center gap-1 mt-2">
-                        <div class="flex items-center gap-2">
-                          <span class="text-lg font-medium">{{ formatDuration(getDailyTotal(user, date)) }}</span>
-                          <button 
-                            v-if="hasDailyEntries(user, date) && settingsStore.compactViewMode"
-                            @click="toggleExpanded(date, user)"
-                            class="p-1 rounded-md hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
-                            :class="{ 'bg-black/5 dark:bg-white/5': isExpanded(date, user) }"
-                          >
-                            <svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': isExpanded(date, user) }" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                            </svg>
-                          </button>
-                        </div>
-                        
-                        <!-- Detailed view mode: Show ticket chips -->
-                        <div v-if="!settingsStore.compactViewMode && hasDailyEntries(user, date)" 
-                             class="flex flex-col gap-1 max-h-24 overflow-y-auto custom-scrollbar p-1 w-[260px] self-start"
+                      <i v-if="getAbsenceInfo(user, date) === 'Sick Leave'" 
+                      class="fa-solid fa-house-medical"> 
+                      </i> 
+                      <i v-if="getAbsenceInfo(user, date) === 'Vacation'" 
+                         class="fa-solid fa-umbrella-beach">
+                      </i>
+                      <i v-if="getAbsenceInfo(user, date) === 'Business Trip'" 
+                         class="fa-solid fa-plane-departure">
+                      </i>
+                      {{ getAbsenceInfo(user, date) }}
+                    </span>
+                    
+                    <div class="flex flex-col items-center justify-center gap-1 mt-2">
+                      <div class="flex items-center gap-2">
+                        <span class="text-lg font-medium">{{ formatDuration(getDailyTotal(user, date)) }}</span>
+                        <button 
+                          v-if="hasDailyEntries(user, date) && settingsStore.compactViewMode"
+                          @click="toggleExpanded(date, user)"
+                          class="p-1 rounded-md hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+                          :class="{ 'bg-black/5 dark:bg-white/5': isExpanded(date, user) }"
                         >
-                          <div v-for="ticket in getGroupedTickets(user, date)" 
-                               :key="ticket.id"
-                               class="time-chip inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium w-full text-left"
-                               :title="ticket.name + ' (' + getTicketTimeRange(user, date, ticket.id).start + ' - ' + getTicketTimeRange(user, date, ticket.id).end + ')'"
-                          >
-                            <span class="flex-shrink-0 mr-1 text-left font-bold">
-                              {{ getTicketTimeRange(user, date, ticket.id).start }}{{ getTicketTimeRange(user, date, ticket.id).end === 'NaN:NaN' ? ' - Now Active' : ' - ' + getTicketTimeRange(user, date, ticket.id).end }}:
-                            </span>
-                            <span class="task-name truncate flex-1 text-left">{{ ticket.name }}</span>
-                          </div>
-                        </div>
+                          <svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': isExpanded(date, user) }" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </button>
                       </div>
                       
-                      <!-- Add email button for missed/exceeded goals -->
-                      <button v-if="shouldShowEmailButton(user, date)"
-                              @click="openEmailTemplate(user, date)"
-                              class="absolute top-0 right-0 text-base px-4 py-0.5 rounded-bl-lg shadow-sm flex items-center gap-2 transition-colors"
-                              :class="calculateGoalStatus(getDailyTotal(user, date), user, date) === 'GOAL_MISSED' 
-                                      ? 'bg-red-500 dark:bg-red-600 text-white dark:text-white hover:bg-red-600 dark:hover:bg-red-700' 
-                                      : 'bg-orange-500 dark:bg-orange-600 text-white dark:text-white hover:bg-orange-600 dark:hover:bg-orange-700'"
-                              :title="getEmailButtonTitle(user, date)"
+                      <div v-if="!settingsStore.compactViewMode && hasDailyEntries(user, date)" 
+                           class="flex flex-col gap-1 max-h-24 overflow-y-auto custom-scrollbar p-1 w-[260px] self-start"
                       >
-                        <div class="relative">
-                          <i class="far fa-envelope text-lg"></i>
-                          <i class="fas fa-circle-exclamation text-[0.85em] absolute -bottom-0 -right-3 border-2 rounded-full"
-                             :class="calculateGoalStatus(getDailyTotal(user, date), user, date) === 'GOAL_MISSED' 
-                                     ? 'border-red-500 dark:border-red-600' 
-                                     : 'border-orange-500 dark:border-orange-600'"
-                          ></i>
+                        <div v-for="ticket in getGroupedTickets(user, date)" 
+                             :key="ticket.id"
+                             class="time-chip inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium w-full text-left"
+                             :title="ticket.name + ' (' + getTicketTimeRange(user, date, ticket.id).start + ' - ' + getTicketTimeRange(user, date, ticket.id).end + ')'"
+                        >
+                          <span class="flex-shrink-0 mr-1 text-left font-bold">
+                            {{ getTicketTimeRange(user, date, ticket.id).start }}{{ getTicketTimeRange(user, date, ticket.id).end === 'NaN:NaN' ? ' - Now Active' : ' - ' + getTicketTimeRange(user, date, ticket.id).end }}:
+                          </span>
+                          <span class="task-name truncate flex-1 text-left">{{ ticket.name }}</span>
                         </div>
-                      </button>
+                      </div>
+                    </div>
+                    
+                    <button v-if="shouldShowEmailButton(user, date)"
+                            @click="openEmailTemplate(user, date)"
+                            class="absolute top-0 right-0 text-base px-4 py-0.5 rounded-bl-lg shadow-sm flex items-center gap-2 transition-colors"
+                            :class="calculateGoalStatus(getDailyTotal(user, date), user, date) === 'GOAL_MISSED' 
+                                    ? 'bg-red-500 dark:bg-red-600 text-white dark:text-white hover:bg-red-600 dark:hover:bg-red-700' 
+                                    : 'bg-orange-500 dark:bg-orange-600 text-white dark:text-white hover:bg-orange-600 dark:hover:bg-orange-700'"
+                            :title="getEmailButtonTitle(user, date)"
+                    >
+                      <div class="relative">
+                        <i class="far fa-envelope text-lg"></i>
+                        <i class="fas fa-circle-exclamation text-[0.85em] absolute -bottom-0 -right-3 border-2 rounded-full"
+                           :class="calculateGoalStatus(getDailyTotal(user, date), user, date) === 'GOAL_MISSED' 
+                                   ? 'border-red-500 dark:border-red-600' 
+                                   : 'border-orange-500 dark:border-orange-600'"
+                        ></i>
+                      </div>
+                    </button>
+                  </td>
+                </tr>
+                <template v-for="date in lastSevenDays" :key="`${user}-${date}-details`">
+                  <tr v-if="isExpanded(date, user)" class="bg-[#5bbcaa]/[0.02] dark:bg-[#5bbcaa]/[0.03]">
+                    <td colspan="8" class="p-0">
+                      <div class="pl-8 pr-4 py-2">
+                        <table class="w-[40%] mr-8 border-l-2 border-[#5bbcaa]/20 dark:border-[#5bbcaa]/30">
+                          <thead>
+                            <tr class="bg-[#5bbcaa]/[0.08] dark:bg-[#5bbcaa]/[0.12]">
+                              <th class="h-12 px-4 py-2 text-left text-sm font-semibold text-light-text-primary dark:text-white uppercase w-[55%]">TICKET</th>
+                              <th class="h-12 px-4 py-2 text-center text-sm font-semibold text-light-text-primary dark:text-white uppercase w-[15%]">START TIME</th>
+                              <th class="h-12 px-4 py-2 text-center text-sm font-semibold text-light-text-primary dark:text-white uppercase w-[15%]">END TIME</th>
+                              <th class="h-12 px-4 py-2 text-center text-sm font-semibold text-light-text-primary dark:text-white uppercase w-[15%]">DURATION</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr v-for="entry in getDailyEntries(user, date)" 
+                                :key="entry.ticketId" 
+                                class="h-12 text-sm hover:bg-[#5bbcaa]/[0.08] dark:hover:bg-[#5bbcaa]/[0.12] transition-colors"
+                            >
+                              <td class="h-12 px-4 py-2 text-left text-light-text-secondary dark:text-gray-300">{{ entry.ticketName }}</td>
+                              <td class="h-12 px-4 py-2 text-center text-light-text-secondary dark:text-gray-300">{{ formatTimeOnly(entry.startTime) }}</td>
+                              <td class="h-12 px-4 py-2 text-center text-light-text-secondary dark:text-gray-300">{{ formatTimeOnly(entry.endTime) }}</td>
+                              <td class="h-12 px-4 py-2 text-center text-light-text-secondary dark:text-gray-300">{{ formatDuration(entry.duration) }}</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
                     </td>
                   </tr>
-                  <!-- Details row -->
-                  <template v-for="date in lastSevenDays" :key="`${user}-${date}-details`">
-                    <tr v-if="isExpanded(date, user)" class="bg-[#5bbcaa]/[0.02] dark:bg-[#5bbcaa]/[0.03]">
-                      <td colspan="8" class="p-0">
-                        <div class="pl-8 pr-4 py-2">
-                          <table class="w-[40%] mr-8 border-l-2 border-[#5bbcaa]/20 dark:border-[#5bbcaa]/30">
-                            <thead>
-                              <tr class="bg-[#5bbcaa]/[0.08] dark:bg-[#5bbcaa]/[0.12]">
-                                <th class="h-12 px-4 py-2 text-left text-sm font-semibold text-light-text-primary dark:text-white uppercase w-[55%]">TICKET</th>
-                                <th class="h-12 px-4 py-2 text-center text-sm font-semibold text-light-text-primary dark:text-white uppercase w-[15%]">START TIME</th>
-                                <th class="h-12 px-4 py-2 text-center text-sm font-semibold text-light-text-primary dark:text-white uppercase w-[15%]">END TIME</th>
-                                <th class="h-12 px-4 py-2 text-center text-sm font-semibold text-light-text-primary dark:text-white uppercase w-[15%]">DURATION</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              <tr v-for="entry in getDailyEntries(user, date)" 
-                                  :key="entry.ticketId" 
-                                  class="h-12 text-sm hover:bg-[#5bbcaa]/[0.08] dark:hover:bg-[#5bbcaa]/[0.12] transition-colors"
-                              >
-                                <td class="h-12 px-4 py-2 text-left text-light-text-secondary dark:text-gray-300">{{ entry.ticketName }}</td>
-                                <td class="h-12 px-4 py-2 text-center text-light-text-secondary dark:text-gray-300">{{ formatTimeOnly(entry.startTime) }}</td>
-                                <td class="h-12 px-4 py-2 text-center text-light-text-secondary dark:text-gray-300">{{ formatTimeOnly(entry.endTime) }}</td>
-                                <td class="h-12 px-4 py-2 text-center text-light-text-secondary dark:text-gray-300">{{ formatDuration(entry.duration) }}</td>
-                              </tr>
-                            </tbody>
-                          </table>
-                        </div>
-                      </td>
-                    </tr>
-                  </template>
                 </template>
-              </tbody>
-            </table>
-          </div>
+              </template>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -490,19 +477,54 @@ const openEmailTemplate = (user: string, date: string) => {
 
 <style scoped>
 .daily-time-list {
-  @apply relative;
+  @apply relative h-full;
 }
 
-.time-chip {
-  @apply select-none;
+.daily-time-list > div {
+  height: calc(100vh - 120px);
 }
-.time-chip .task-name {
-  @apply select-text;
+
+.daily-time-list > div > div:last-child {
+  @apply overflow-auto;
+  height: calc(100% - 48px);
+}
+
+thead {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+thead th {
+  position: sticky;
+  top: 0;
+  background-color: rgb(91 188 170 / 0.05);
+  z-index: 10;
+}
+
+:global(.dark) thead th {
+  background-color: rgb(91 188 170 / 0.1);
+}
+
+th:first-child,
+td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 15;
+}
+
+th:first-child {
+  z-index: 25;
+}
+
+.custom-scrollbar {
+  @apply overflow-auto;
 }
 
 .custom-scrollbar::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
+  width: 8px;
+  height: 8px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
@@ -516,6 +538,13 @@ const openEmailTemplate = (user: string, date: string) => {
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #5bbcaa60;
+}
+
+.time-chip {
+  @apply select-none;
+}
+.time-chip .task-name {
+  @apply select-text;
 }
 
 .loading-backdrop {

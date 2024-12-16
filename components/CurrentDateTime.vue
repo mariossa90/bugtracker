@@ -1,6 +1,6 @@
 <template>
   <div class="no-select flex flex-col">
-    <div class="text-4xl font-bold text-[#5bbcaa]"">
+    <div class="text-4xl font-bold text-[#5bbcaa]">
       {{ currentTime }}
     </div>
     <div class="text-lg text-light-text-secondary dark:text-gray-400">

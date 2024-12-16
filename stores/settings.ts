@@ -133,7 +133,7 @@ export const useSettingsStore = defineStore('settings', {
         text: '#12352f'
       }
     },
-    boardUpdatePassword: 'Woojin2544', // Set your default password here
+    boardUpdatePassword: 'xK9#mP2$vL5nR8@jQ3', // Generated strong random password
     hasEnteredPassword: false
   }),
 

@@ -130,6 +130,26 @@
                     User Analytics
                   </span>
                 </button>
+                <button 
+                  @click="activeBoard = 'tickets'" 
+                  class="flex items-center gap-3 px-3 py-2 transition-colors relative rounded-md" 
+                  :class="[
+                    activeBoard === 'tickets' 
+                      ? 'text-[#5bbcaa] bg-[#5bbcaa]/5 before:absolute before:left-0 before:top-1 before:bottom-1 before:w-0.5 before:bg-[#5bbcaa] before:rounded-full'
+                      : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+                  ]"
+                  :title="!isSidebarExpanded ? 'Tickets Dashboard' : ''"
+                >
+                  <i class="w-4 h-4 flex-shrink-0" :class="[
+                    activeBoard === 'tickets' ? 'fa-solid fa-clipboard-list' : 'fa-regular fa-clipboard'
+                  ]"></i>
+                  <span 
+                    class="whitespace-nowrap transition-opacity duration-300"
+                    :class="{ 'opacity-0 w-0': !isSidebarExpanded, 'opacity-100': isSidebarExpanded }"
+                  >
+                    Tickets Dashboard
+                  </span>
+                </button>
               </div>
             </div>
 
@@ -145,14 +165,17 @@
                 leave-to-class="opacity-0"
               >
                 <KeepAlive>
-                  <div v-if="activeBoard === 'time-tracking'" class="w-full h-full overflow-y-auto custom-scrollbar">
+                  <div v-if="activeBoard === 'time-tracking'" class="h-full">
                     <DailyTimeList :items="allItems" />
                   </div>
-                  <div v-else-if="activeBoard === 'analytics'" class="w-full h-full overflow-y-auto custom-scrollbar">
+                  <div v-else-if="activeBoard === 'analytics'">
                     <AnalyticsBoard />
                   </div>
-                  <div v-else-if="activeBoard === 'user-analytics'" class="w-full h-full overflow-y-auto custom-scrollbar">
+                  <div v-else-if="activeBoard === 'user-analytics'">
                     <UserAnalytics />
+                  </div>
+                  <div v-else-if="activeBoard === 'tickets'">
+                    <TicketsBoard />
                   </div>
                 </KeepAlive>
               </Transition>
@@ -223,6 +246,7 @@ import CurrentDateTime from '~/components/CurrentDateTime.vue'
 import ApiResponseTime from '~/components/ApiResponseTime.vue'
 import { useFullscreen } from '~/composables/useFullscreen'
 import { useCalendarStore } from '~/stores/calendar'
+import TicketsBoard from '~/components/TicketsBoard.vue'
 
 const mondayStore = useMondayStore()
 const settingsStore = useSettingsStore()
