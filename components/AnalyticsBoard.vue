@@ -14,7 +14,7 @@
             </svg>
           </button>
 
-          <Calendar 
+          <DatePicker 
             v-model="selectedDate" 
             :showIcon="true"
             :manualInput="false"
@@ -74,6 +74,12 @@
 </template>
 
 <script setup lang="ts">
+ interface ProjectStats {
+   total: number
+   completed: number
+   timeTracked: number
+ }
+
 import { computed, ref } from 'vue'
 import { useMondayStore } from '~/stores/monday'
 import { useSettingsStore } from '~/stores/settings'

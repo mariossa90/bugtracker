@@ -41,7 +41,7 @@
               </svg>
             </button>
 
-            <Calendar 
+            <DatePicker 
               v-model="selectedDate" 
               :showIcon="true"
               :manualInput="false"
