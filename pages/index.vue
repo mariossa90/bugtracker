@@ -3,7 +3,7 @@
     <div class="mx-auto">
       <div class="flex flex-col gap-2">
         <!-- Header with action buttons -->
-        <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center justify-between h-[76px]">
           <div class="flex flex-col">
             <div class="flex items-center gap-4">
               <CurrentDateTime />
@@ -134,7 +134,7 @@
             </div>
 
             <!-- Main content area -->
-            <div class="flex-1 min-w-0">
+            <div class="flex-1 min-w-0 overflow-hidden max-h-[calc(100vh-120px)]">
               <Transition
                 mode="out-in"
                 enter-active-class="transition-opacity duration-200 ease-out"
@@ -145,13 +145,13 @@
                 leave-to-class="opacity-0"
               >
                 <KeepAlive>
-                  <div v-if="activeBoard === 'time-tracking'" class="w-full">
+                  <div v-if="activeBoard === 'time-tracking'" class="w-full h-full overflow-y-auto custom-scrollbar">
                     <DailyTimeList :items="allItems" />
                   </div>
-                  <div v-else-if="activeBoard === 'analytics'" class="w-full">
+                  <div v-else-if="activeBoard === 'analytics'" class="w-full h-full overflow-y-auto custom-scrollbar">
                     <AnalyticsBoard />
                   </div>
-                  <div v-else-if="activeBoard === 'user-analytics'" class="w-full">
+                  <div v-else-if="activeBoard === 'user-analytics'" class="w-full h-full overflow-y-auto custom-scrollbar">
                     <UserAnalytics />
                   </div>
                 </KeepAlive>

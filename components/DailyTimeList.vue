@@ -1,12 +1,12 @@
 <template>
   <div class="no-select daily-time-list">
-    <div class="bg-light-surface dark:bg-gray-800 rounded-xl p-6">
+    <div class="bg-light-surface dark:bg-gray-800 rounded-xl p-6 h-full">
       <div class="flex justify-end mb-4">
         <CustomDatePicker />
       </div>
-      <div class="overflow-x-auto -mx-6 custom-scrollbar">
+      <div class="overflow-hidden h-[calc(100%-4rem)]">
         <div class="inline-block min-w-full align-middle">
-          <div class="overflow-hidden px-4 relative">
+          <div class="overflow-auto custom-scrollbar px-4 relative">
             <table class="min-w-full rounded-lg border dark:border-gray-700 overflow-hidden">
               <!-- Loading overlay -->
               <tbody>
