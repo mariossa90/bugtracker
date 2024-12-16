@@ -76,7 +76,9 @@
                         class="h-12 py-4 px-2 text-center text-light-text-primary dark:text-gray-300 relative transition-opacity duration-200 group-hover:[&:not(:hover)]:opacity-80"
                         :class="[
                           isToday(date) ? 'border-t border-l border-b dark:border-gray-700' : [
-                            getGoalStatusClass(calculateGoalStatus(getDailyTotal(user, date), user, date)),
+                            getAbsenceInfo(user, date) && getAbsenceInfo(user, date) !== 'Business Trip' 
+                              ? '' 
+                              : getGoalStatusClass(calculateGoalStatus(getDailyTotal(user, date), user, date)),
                             'transition-colors duration-200'
                           ]
                         ]"
