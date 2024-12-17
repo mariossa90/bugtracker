@@ -6,7 +6,7 @@
       </div>
       <div v-else-if="selectedUser" class="overflow-x-auto -mx-6 custom-scrollbar">
         <div class="inline-block min-w-full align-middle">
-          <div class="overflow-hidden px-4 relative">
+          <div class="overflow-hidden relative">
             <table class="min-w-full rounded-lg border dark:border-gray-700 overflow-hidden">
               <!-- Loading overlay -->
               <tbody>

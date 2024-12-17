@@ -88,95 +88,128 @@
     </div>
 
     <!-- User Tasks Charts -->
-    <div class="mt-8 grid grid-cols-[2fr,1fr,1fr] gap-8">
+    <div class="mt-8 grid grid-cols-[2fr,1fr,1fr] gap-8 h-[55vh]">
       <!-- Left Column (Bar Charts) -->
-      <div ref="chartsColumn">
+      <div class="flex flex-col">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-lg font-medium text-gray-800 dark:text-gray-200">
             {{ showTimeChart ? 'Time Tracked' : 'Assigned Tasks' }}
           </h3>
-          <button 
-            @click="showTimeChart = !showTimeChart"
-            class="px-3 py-1.5 text-sm font-medium rounded-lg transition-colors flex items-center gap-2
-              text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700/50 border border-gray-200 dark:border-gray-600"
-          >
-            <i class="fas" :class="showTimeChart ? 'fa-tasks' : 'fa-clock'"></i>
-            {{ showTimeChart ? 'Show Tasks' : 'Show Time' }}
-          </button>
+          <div class="flex rounded-lg shadow-sm">
+            <button 
+              @click="showTimeChart = true"
+              class="px-4 py-1.5 text-sm font-medium flex items-center gap-2 border border-r-0 first:rounded-l-lg"
+              :class="[
+                showTimeChart
+                  ? 'bg-[#5bbcaa] text-white hover:bg-[#4ca899] border-[#5bbcaa]'
+                  : 'bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 border-gray-200 dark:border-gray-600'
+              ]"
+            >
+              <i class="fas fa-clock"></i>
+              Time
+            </button>
+            <button 
+              @click="showTimeChart = false"
+              class="px-4 py-1.5 text-sm font-medium flex items-center gap-2 border last:rounded-r-lg"
+              :class="[
+                !showTimeChart
+                  ? 'bg-[#5bbcaa] text-white hover:bg-[#4ca899] border-[#5bbcaa]'
+                  : 'bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 border-gray-200 dark:border-gray-600'
+              ]"
+            >
+              <i class="fas fa-tasks"></i>
+              Tasks
+            </button>
+          </div>
         </div>
         
         <!-- Combined Chart Container -->
-        <div class="bg-gray-50 dark:bg-gray-800/70 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
-          <div v-if="selectedUser" class="bg-gray-50 dark:bg-gray-800/70 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+        <div class="bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm h-[calc(55vh-4rem)]">
+          <div v-if="selectedUser" class="h-full">
             <Chart 
               v-if="!showTimeChart"
               type="bar" 
               :data="tasksChartData" 
               :options="tasksChartOptions" 
-              class="h-[400px]" 
+              class="h-full" 
             />
             <Chart 
               v-if="showTimeChart"
               type="bar" 
               :data="timeChartData" 
               :options="timeChartOptions" 
-              class="h-[400px]" 
+              class="h-full" 
             />
           </div>
-          <div v-else class="h-[400px] flex items-center justify-center text-gray-500 dark:text-gray-400">
+          <div v-else class="h-full flex items-center justify-center text-gray-500 dark:text-gray-400">
             Please select a user to view their {{ showTimeChart ? 'time tracking' : 'tasks' }}
           </div>
         </div>
       </div>
 
       <!-- Middle Column (Pie Charts) -->
-      <div>
+      <div class="flex flex-col">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-lg font-medium text-gray-800 dark:text-gray-200">
             {{ showTimePieChart ? 'Time Distribution' : 'Tasks Distribution' }}
           </h3>
-          <button 
-            @click="showTimePieChart = !showTimePieChart"
-            class="px-3 py-1.5 text-sm font-medium rounded-lg transition-colors flex items-center gap-2
-              text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700/50 border border-gray-200 dark:border-gray-600"
-          >
-            <i class="fas" :class="showTimePieChart ? 'fa-tasks' : 'fa-clock'"></i>
-            {{ showTimePieChart ? 'Show Tasks' : 'Show Time' }}
-          </button>
+          <div class="flex rounded-lg shadow-sm">
+            <button 
+              @click="showTimePieChart = true"
+              class="px-4 py-1.5 text-sm font-medium flex items-center gap-2 border border-r-0 first:rounded-l-lg"
+              :class="[
+                showTimePieChart
+                  ? 'bg-[#5bbcaa] text-white hover:bg-[#4ca899] border-[#5bbcaa]'
+                  : 'bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 border-gray-200 dark:border-gray-600'
+              ]"
+            >
+              <i class="fas fa-clock"></i>
+              Time
+            </button>
+            <button 
+              @click="showTimePieChart = false"
+              class="px-4 py-1.5 text-sm font-medium flex items-center gap-2 border last:rounded-r-lg"
+              :class="[
+                !showTimePieChart
+                  ? 'bg-[#5bbcaa] text-white hover:bg-[#4ca899] border-[#5bbcaa]'
+                  : 'bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 border-gray-200 dark:border-gray-600'
+              ]"
+            >
+              <i class="fas fa-tasks"></i>
+              Tasks
+            </button>
+          </div>
         </div>
         
         <!-- Combined Pie Chart Container -->
-        <div class="bg-gray-50 dark:bg-gray-800/70 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
-          <div v-if="selectedUser" class="bg-gray-50 dark:bg-gray-800/70 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
+        <div class="bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm h-[calc(55vh-4rem)]">
+          <div v-if="selectedUser" class="h-full">
             <Chart 
               v-if="!showTimePieChart"
               type="pie" 
               :data="tasksPieChartData" 
               :options="pieChartOptions" 
-              class="h-full w-full min-h-[400px]" 
+              class="h-full w-full" 
             />
             <Chart 
               v-if="showTimePieChart"
               type="pie" 
               :data="timePieChartData" 
               :options="timePieChartOptions" 
-              class="h-full w-full min-h-[400px]" 
+              class="h-full w-full" 
             />
           </div>
-          <div v-else class="h-[400px] flex items-center justify-center text-gray-500 dark:text-gray-400">
+          <div v-else class="h-full flex items-center justify-center text-gray-500 dark:text-gray-400">
             Please select a user to view their {{ showTimePieChart ? 'time' : 'tasks' }} distribution
           </div>
         </div>
       </div>
 
       <!-- Task Details Column -->
-      <div>
-        <h3 class="text-lg font-medium text-gray-800 dark:text-gray-200 mb-4">Task Details</h3>
-        <div 
-          class="bg-gray-50 dark:bg-gray-800/70 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm overflow-auto"
-          :style="{ height: chartsHeight + 'px' }"
-        >
-          <div v-if="selectedUser" class="space-y-2">
+      <div class="flex flex-col">
+        <h3 class="text-lg font-medium text-gray-800 dark:text-gray-200 mb-5">Task Details</h3>
+        <div class="bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm h-[calc(55vh-4rem)] overflow-auto">
+          <div v-if="selectedUser" class="space-y-2 h-full overflow-y-auto">
             <!-- Summary Section -->
             <div class="mb-6 grid grid-cols-2 gap-4">
               <div class="bg-[#5bbcaa]/10 dark:bg-[#5bbcaa]/20 rounded-lg p-4">
@@ -197,7 +230,7 @@
               <!-- Project Header -->
               <button 
                 @click="toggleProject(project)"
-                class="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-lg transition-colors"
+                class="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg transition-colors"
                 :style="{
                   borderLeft: `4px solid ${getProjectStatusColors([project])[0]}`,
                   paddingLeft: '1rem'
@@ -222,7 +255,7 @@
                 <div 
                   v-for="task in [...tasks].sort((a, b) => b.timeTracked - a.timeTracked)" 
                   :key="task.id" 
-                  class="px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/30 flex items-center justify-between"
+                  class="px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-600/50 flex items-center justify-between"
                 >
                   <div class="flex items-center justify-between flex-1 min-w-0">
                     <div class="flex items-center gap-2">
@@ -273,12 +306,15 @@
       </div>
     </div>
 
+    <!-- UserTimeList Container -->
     <div class="mt-8">
-      <UserTimeList 
-        :selected-user="selectedUser"
-        :selected-date="selectedDate"
-        :selected-period="selectedPeriod"
-      />
+      <div class="col-span-3">
+        <UserTimeList 
+          :selected-user="selectedUser"
+          :selected-date="selectedDate"
+          :selected-period="selectedPeriod"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -406,23 +442,7 @@ const getProjectTotalTime = (tasks: any[]) => {
   return tasks.reduce((total, task) => total + task.timeTracked, 0)
 }
 
-// Add with other refs
-const chartsColumn = ref<HTMLElement | null>(null)
-const chartsHeight = ref(0)
 
-// Add this function to update the height
-const updateChartsHeight = async () => {
-  await nextTick()
-  if (chartsColumn.value) {
-    chartsHeight.value = chartsColumn.value.offsetHeight - 44 // 44px for heading + margin
-  }
-}
-
-// Update height when content changes
-watch([selectedUser, selectedPeriod, selectedDate], updateChartsHeight)
-
-// Initial height calculation
-onMounted(updateChartsHeight)
 
 // Add this function with the other functions
 const getProjectTimePercentage = (project: string, projectTime: number) => {
@@ -450,8 +470,8 @@ const openMondayTask = (boardId: string, taskId: string) => {
   window.open(url, '_blank')
 }
 
-const showTimeChart = ref(false)
-const showTimePieChart = ref(false)
+const showTimeChart = ref(true)
+const showTimePieChart = ref(true)
 
 // Add these helper functions
 const getTotalTimeTracked = () => {
