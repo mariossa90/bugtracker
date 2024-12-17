@@ -68,9 +68,9 @@
                       class="h-12 py-4 px-2 text-center text-light-text-primary dark:text-gray-300 relative transition-opacity duration-200 group-hover:[&:not(:hover)]:opacity-80"
                       :class="[
                         isToday(date) ? 'border-t border-l border-b dark:border-gray-700' : [
-                          getAbsenceInfo(user, date) && getAbsenceInfo(user, date) !== 'Business Trip' 
+                          !isFutureDate(date) && getAbsenceInfo(user, date) && getAbsenceInfo(user, date) !== 'Business Trip' 
                             ? '' 
-                            : getGoalStatusClass(calculateGoalStatus(getDailyTotal(user, date), user, date)),
+                            : !isFutureDate(date) ? getGoalStatusClass(calculateGoalStatus(getDailyTotal(user, date), user, date)) : '',
                           'transition-colors duration-200'
                         ]
                       ]"
@@ -391,11 +391,13 @@ const shouldShowEmailButton = (user: string, date: string) => {
   // 1. It's today's column
   // 2. User is marked as absent
   // 3. Status is not missed or exceeded
+  // 4. It's a future date
   const isTodays = isToday(date)
   const isAbsent = getAbsenceInfo(user, date) !== null
   const isRelevantStatus = status === 'GOAL_MISSED' || status === 'GOAL_EXCEEDED'
+  const isFuture = isFutureDate(date)
   
-  return !isTodays && !isAbsent && isRelevantStatus
+  return !isTodays && !isAbsent && !isFuture && isRelevantStatus
 }
 
 const getEmailButtonTitle = (user: string, date: string) => {
@@ -442,6 +444,14 @@ const openEmailTemplate = (user: string, date: string) => {
   document.body.appendChild(a)
   a.click()
   document.body.removeChild(a)
+}
+
+const isFutureDate = (date: string) => {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const compareDate = new Date(date)
+  compareDate.setHours(0, 0, 0, 0)
+  return compareDate.getTime() > today.getTime()
 }
 </script>
 
