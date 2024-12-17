@@ -1,50 +1,52 @@
 <template>
-  <div class="p-6">
-    <h2 class="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-6">
-      Tickets Dashboard
-    </h2>
+  <div class="flex flex-col h-[calc(100vh-64px)] p-6 overflow-hidden">
+    <div class="flex-none">
+      <h2 class="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-6">
+        Tickets Dashboard
+      </h2>
 
-    <!-- Updated Search Bar -->
-    <div class="mb-6">
-      <div class="relative w-full md:w-[calc(50%-1rem)] lg:w-[calc(33.333%-1rem)]">
-        <input
-          v-model="searchQuery"
-          type="text"
-          placeholder="Search for tickets..."
-          class="w-full px-4 py-3 pl-10 pr-4 text-base border-2 rounded-lg 
-                 bg-white dark:bg-gray-800 
-                 border-gray-200 dark:border-gray-700
-                 text-gray-900 dark:text-gray-100
-                 focus:ring-[#5bbcaa] focus:border-[#5bbcaa] focus:ring-2 focus:border-2 focus:outline-none"
-        />
-        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <i class="fas fa-search text-gray-400"></i>
+      <!-- Updated Search Bar -->
+      <div class="mb-6">
+        <div class="relative w-full md:w-[calc(50%-1rem)] lg:w-[calc(33.333%-1rem)]">
+          <input
+            v-model="searchQuery"
+            type="text"
+            placeholder="Search for tickets..."
+            class="w-full px-4 py-3 pl-10 pr-4 text-base border-2 rounded-lg 
+                   bg-white dark:bg-gray-800 
+                   border-gray-200 dark:border-gray-700
+                   text-gray-900 dark:text-gray-100
+                   focus:ring-[#5bbcaa] focus:border-[#5bbcaa] focus:ring-2 focus:border-2 focus:outline-none"
+          />
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <i class="fas fa-search text-gray-400"></i>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- Results Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 overflow-y-auto flex-grow pb-20">
       <div v-for="ticket in searchResults" 
            :key="ticket.id"
-           class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 
-                  hover:shadow-lg transition-shadow duration-200">
+           class="bg-white dark:bg-gray-700 rounded-lg border-2 border-gray-100 dark:border-gray-800 
+                    h-fit relative">
         <!-- Card Header -->
-        <div class="p-4 border-b border-gray-200 dark:border-gray-700">
-          <div class="flex items-start justify-between">
-            <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 line-clamp-2">
+        <div class="p-3 border-b border-gray-200 dark:border-gray-700">
+          <div class="flex items-center justify-between gap-2">
+            <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 truncate flex-1">
               {{ ticket.name }}
             </h3>
             <a :href="getMondayUrl(ticket.id)" 
                target="_blank"
-               class="ml-2 text-[#5bbcaa] hover:text-[#4ca899] transition-colors">
+               class="ml-2 text-[#5bbcaa] hover:text-[#4ca899] transition-colors flex-shrink-0">
               <i class="fas fa-external-link-alt"></i>
             </a>
           </div>
         </div>
 
         <!-- Card Body -->
-        <div class="p-4 space-y-3">
+        <div class="p-3 space-y-2">
           <!-- Project -->
           <div class="flex items-center gap-2">
             <span class="text-sm text-gray-500 dark:text-gray-400 w-32">Project:</span>
@@ -94,7 +96,7 @@
           <!-- Development Timeline -->
           <div class="flex items-center gap-2">
             <span class="text-sm text-gray-500 dark:text-gray-400 w-32">Timeline:</span>
-            <span class="text-sm text-gray-700 dark:text-gray-300">{{ ticket.timeline }}</span>
+            <span class="text-sm text-gray-700 dark:text-gray-300 flex-1" v-html="ticket.timeline"></span>
           </div>
 
           <!-- Estimated Duration -->
@@ -112,16 +114,16 @@
               </span>
             </div>
             <!-- Progress Bar -->
-            <div v-if="ticket.estimatedSeconds" class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
-              <div class="bg-[#5bbcaa] h-full rounded-full transition-all duration-300"
-                   :style="{ width: `${getProgressPercentage(ticket.totalTime, ticket.estimatedSeconds)}%` }">
+            <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-1.5">
+              <div class="h-full rounded-full transition-all duration-300"
+                   :style="getProgressBarStyle(ticket.totalTime, ticket.estimatedSeconds)">
               </div>
             </div>
           </div>
         </div>
 
         <!-- Card Footer -->
-        <div class="p-4 border-t border-gray-200 dark:border-gray-700">
+        <div class="p-3 border-t border-gray-200 dark:border-gray-700">
           <button 
             @click="toggleTimeEntries(ticket.id)"
             class="text-sm text-[#5bbcaa] hover:text-[#4ca899] transition-colors flex items-center gap-1"
@@ -136,7 +138,7 @@
                  class="max-h-[200px] overflow-y-auto custom-scrollbar space-y-2 pr-2">
               <div v-for="(entry, index) in ticket.timeEntries" 
                    :key="index"
-                   class="text-sm bg-gray-50 dark:bg-gray-700/50 rounded-lg p-2 flex justify-between items-center">
+                   class="text-sm bg-gray-100 dark:bg-gray-600 rounded-lg p-2 flex justify-between items-center">
                 <div class="flex items-center gap-2">
                   <template v-if="settingsStore.showUserImages">
                     <img v-if="getUserImage(entry.userName)"
@@ -150,7 +152,7 @@
                     </i>
                   </template>
                   <span class="text-gray-600 dark:text-gray-300">{{ entry.userName }}</span>
-                  <span class="text-gray-400 dark:text-gray-500">���</span>
+                  <span class="text-gray-400 dark:text-gray-500">•</span>
                   <span class="text-gray-600 dark:text-gray-300">{{ formatDate(entry.date) }}</span>
                 </div>
                 <div class="flex items-center gap-2">
@@ -173,7 +175,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useDailyTimeStore } from '~/stores/dailyTime'
 import { useMondayStore } from '~/stores/monday'
 import { useSettingsStore } from '~/stores/settings'
@@ -184,6 +186,16 @@ const mondayStore = useMondayStore()
 const settingsStore = useSettingsStore()
 const userStore = useUserStore()
 const searchQuery = ref('')
+const debouncedSearchQuery = ref('')
+
+let timeout: NodeJS.Timeout | null = null
+
+watch(searchQuery, (newValue) => {
+  if (timeout) clearTimeout(timeout)
+  timeout = setTimeout(() => {
+    debouncedSearchQuery.value = newValue
+  }, 200) // 200ms delay
+})
 
 interface Ticket {
   id: string
@@ -255,9 +267,21 @@ const formatDuration = (seconds: number): string => {
   return `${hours}h ${minutes}m`
 }
 
-const getProgressPercentage = (actual: number, estimated: number | null): number => {
-  if (!estimated) return 0
-  return Math.min((actual / estimated) * 100, 100)
+const getProgressBarStyle = (actual: number, estimated: number | null) => {
+  if (!estimated || estimated === 0) {
+    return { 
+      width: '0%',
+      backgroundColor: '#5bbcaa'
+    };
+  }
+  
+  const percentage = Math.min((actual / estimated) * 100, 100);
+  const isOvertime = actual > estimated;
+  
+  return { 
+    width: `${percentage}%`,
+    backgroundColor: isOvertime ? '#ef4444' : '#5bbcaa'  // red if overtime, default accent color otherwise
+  };
 }
 
 const getMondayUrl = (taskId: string): string => {
@@ -268,10 +292,31 @@ const getMondayUrl = (taskId: string): string => {
   return `https://woojin-world.monday.com/boards/${task?.boardId}/pulses/${taskId}`
 }
 
-const searchResults = computed<Ticket[]>(() => {
-  if (!searchQuery.value) return []
+const formatTimelineDate = (dateString: string): string => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  const day = date.getDate().toString().padStart(2, '0');
+  const month = date.toLocaleString('en-US', { month: 'short' });
+  const year = date.getFullYear();
+  return `${day}. ${month} ${year}`;
+}
+
+const formatTimeline = (timeline: string): string => {
+  if (!timeline) return 'No Timeline';
   
-  const query = searchQuery.value.toLowerCase()
+  const dates = timeline.split(' - ');
+  if (dates.length !== 2) return timeline;
+  
+  const startDate = formatTimelineDate(dates[0]);
+  const endDate = formatTimelineDate(dates[1]);
+  
+  return `From <span class="text-[#5bbcaa]">${startDate}</span> Until <span class="text-[#5bbcaa]">${endDate}</span>`;
+}
+
+const searchResults = computed<Ticket[]>(() => {
+  if (!debouncedSearchQuery.value) return []
+  
+  const query = debouncedSearchQuery.value.toLowerCase()
   const results: Ticket[] = []
 
   // Create a map of time entries by ticket ID
@@ -325,8 +370,8 @@ const searchResults = computed<Ticket[]>(() => {
           assignedTo: assignedColumn?.text || 'Unassigned',
           priority: priorityColumn?.text || 'No Priority',
           priorityColor: priorityColumn?.label_style?.color || '#cbd5e1',
-          timeline: timelineColumn?.text || 'No Timeline',
-          estimatedTime: estimatedColumn?.text || 'No Estimate',
+          timeline: timelineColumn?.text ? formatTimeline(timelineColumn.text) : 'No Timeline',
+          estimatedTime: estimatedColumn?.text ? `${estimatedColumn.text}h` : 'No Estimate',
           estimatedSeconds: estimatedColumn?.value ? parseInt(estimatedColumn.value.replace('"', '')) * 3600 : null,
           totalTime: timeData?.totalTime || 0,
           timeEntries: timeData?.entries || []
