@@ -111,10 +111,10 @@
                         <div v-for="ticket in getGroupedTickets(user, date)" 
                              :key="ticket.id"
                              class="time-chip inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium w-full text-left"
-                             :title="ticket.name + ' (' + getTicketTimeRange(user, date, ticket.id).start + ' - ' + getTicketTimeRange(user, date, ticket.id).end + ')'"
+                             :title="ticket.name + ' (' + formatTimeOnly(ticket.startTime) + ' - ' + (ticket.endTime === null ? 'Now Active' : formatTimeOnly(ticket.endTime)) + ')'"
                         >
                           <span class="flex-shrink-0 mr-1 text-left font-bold">
-                            {{ getTicketTimeRange(user, date, ticket.id).start }}{{ getTicketTimeRange(user, date, ticket.id).end === 'NaN:NaN' ? ' - Now Active' : ' - ' + getTicketTimeRange(user, date, ticket.id).end }}:
+                            {{ formatTimeOnly(ticket.startTime) }}{{ ticket.endTime === null ? ' - Now Active' : ' - ' + formatTimeOnly(ticket.endTime) }}:
                           </span>
                           <span class="task-name truncate flex-1 text-left">{{ ticket.name }}</span>
                         </div>
@@ -346,48 +346,18 @@ const getUserImage = (userName: string) => {
 
 const getGroupedTickets = (user: string, date: string) => {
   const entries = getDailyEntries(user, date)
-  const ticketMap = new Map()
   
-  entries.forEach(entry => {
-    const existing = ticketMap.get(entry.ticketId)
-    if (existing) {
-      existing.totalDuration = addDurations(existing.totalDuration, entry.duration)
-      if (new Date(entry.startTime) < new Date(existing.startTime)) {
-        existing.startTime = entry.startTime
-      }
-    } else {
-      ticketMap.set(entry.ticketId, {
-        id: entry.ticketId,
-        name: entry.ticketName,
-        totalDuration: entry.duration,
-        startTime: entry.startTime
-      })
-    }
-  })
-  
-  return Array.from(ticketMap.values())
+  // Return entries sorted by start time, with each entry as a separate item
+  return entries
+    .map(entry => ({
+      id: `${entry.ticketId}-${entry.startTime}`,
+      name: entry.ticketName,
+      duration: entry.duration,
+      startTime: entry.startTime,
+      // If it's a running ticket (endTime is NaN:NaN or null/undefined), set endTime to null
+      endTime: (!entry.endTime || entry.endTime === 'NaN:NaN') ? null : entry.endTime
+    }))
     .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
-}
-
-const addDurations = (duration1: string, duration2: string): string => {
-  const [h1, m1, s1] = duration1.split(':').map(Number)
-  const [h2, m2, s2] = duration2.split(':').map(Number)
-  
-  let totalSeconds = s1 + s2
-  let totalMinutes = m1 + m2
-  let totalHours = h1 + h2
-  
-  if (totalSeconds >= 60) {
-    totalMinutes += Math.floor(totalSeconds / 60)
-    totalSeconds %= 60
-  }
-  
-  if (totalMinutes >= 60) {
-    totalHours += Math.floor(totalMinutes / 60)
-    totalMinutes %= 60
-  }
-  
-  return `${String(totalHours).padStart(2, '0')}:${String(totalMinutes).padStart(2, '0')}:${String(totalSeconds).padStart(2, '0')}`
 }
 
 const getTicketTimeRange = (user: string, date: string, ticketId: string) => {
