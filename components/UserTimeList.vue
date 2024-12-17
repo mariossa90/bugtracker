@@ -10,11 +10,13 @@
             <table class="min-w-full rounded-lg border dark:border-gray-700 overflow-hidden">
               <!-- Loading overlay -->
               <tbody>
-                <tr v-if="isLoading" class="absolute top-0 left-4 right-4 bottom-0 z-50">
-                  <td colspan="100%" class="h-full rounded-lg overflow-hidden">
+                <tr v-if="isLoading" class="absolute inset-0 z-50">
+                  <td colspan="100%" class="h-full">
                     <div class="absolute inset-0 flex items-center justify-center">
-                      <div class="loading-backdrop rounded-lg"></div>
-                      <div class="loading-backdrop-edge rounded-lg"></div>
+                      <div class="absolute inset-0">
+                        <div class="loading-backdrop"></div>
+                        <div class="loading-backdrop-edge"></div>
+                      </div>
                       <div class="relative z-10 flex flex-col items-center gap-3">
                         <i class="fas fa-circle-notch fa-spin fa-2x text-[#5bbcaa]"></i>
                         <span class="text-sm font-medium text-[#5bbcaa]">Updating data...</span>
@@ -543,17 +545,11 @@ const openEmailTemplate = (user: string, date: string) => {
 .loading-backdrop {
   position: absolute;
   inset: 0;
-  height: 200%;
+  height: 100%;
   background: hsl(0deg 0% 100% / 0.1);
   pointer-events: none;
   backdrop-filter: blur(16px);
   border-radius: 0.5rem;
-  mask-image: linear-gradient(
-    to bottom,
-    black 0,
-    black 50%,
-    transparent 50%
-  );
 }
 
 .loading-backdrop-edge {
@@ -561,7 +557,6 @@ const openEmailTemplate = (user: string, date: string) => {
   position: absolute;
   inset: 0;
   height: 100%;
-  transform: translateY(100%);
   background: rgb(0 0 0 / 0.15);
   backdrop-filter: blur(8px) brightness(120%);
   pointer-events: none;
