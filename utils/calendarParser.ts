@@ -7,23 +7,21 @@ export function parseSubject(subject: string): ParsedUser[] {
   // Remove any extra whitespace and split by both comma and plus
   const parts = subject.split(/[,+]/).map(part => part.trim());
   
-  // Get the last part to check for a reason
-  const lastPart = parts[parts.length - 1];
-  
-  // Check if the last part contains a reason (like "DR")
-  const reasonMatch = lastPart.match(/\s+(DR|Urlaub|Krank|Pflege)$/);
-  const reason = reasonMatch ? reasonMatch[1] : null;
-  
-  // If there was a reason in the last part, remove it from the name
-  if (reason) {
-    parts[parts.length - 1] = lastPart.replace(/\s+(DR|Urlaub|Krank|Pflege)$/, '');
-  }
-  
-  // Map each part to a ParsedUser object
-  return parts.map(name => ({
-    name: name.trim(),
-    reason: reason
-  }));
+  return parts.map(part => {
+    // Look for reason at the end of each part, case insensitive for all reasons
+    const reasonMatch = part.match(/\s+(DR|[Uu]rlaub|[Kk]rank|[Pp]flege)$/i);
+    const reason = reasonMatch ? reasonMatch[1] : null;
+    
+    // Remove the reason from the name if found
+    const name = reason 
+      ? part.slice(0, part.length - reason.length).trim() 
+      : part.trim();
+    
+    return {
+      name,
+      reason: reason ? reason.charAt(0).toUpperCase() + reason.slice(1).toLowerCase() : null
+    };
+  });
 }
 
 // User matching function
