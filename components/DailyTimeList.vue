@@ -7,7 +7,7 @@
       <div class="flex-1 relative">
         <div class="absolute inset-0">
           <table class="min-w-full border dark:border-gray-700">
-            <thead class="bg-[#eef8f6] dark:bg-[#293c39] sticky top-0 z-10">
+            <thead class="bg-[#eef8f6] dark:bg-[#293c39] sticky z-10">
               <tr>
                 <th class="h-12 px-2 text-center text-sm font-semibold text-light-text-primary dark:text-white sticky left-0 bg-[#5bbcaa]/5 dark:bg-[#5bbcaa]/10 uppercase whitespace-nowrap w-[180px]">
                   USER
@@ -471,14 +471,14 @@ const isFutureDate = (date: string) => {
 
 thead {
   position: sticky;
-  top: 0;
+  top: -1px;
   z-index: 20;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 thead th {
   position: sticky;
-  top: 0;
+  top: -1px;
   background-color: rgb(91 188 170 / 0.05);
   z-index: 10;
 }
@@ -630,4 +630,5 @@ th:first-child {
   background-color: v-bind('settingsStore.goalColors.dark.goalExceeded.color');
   color: v-bind('settingsStore.goalColors.dark.textColor');
 }
+
 </style>
