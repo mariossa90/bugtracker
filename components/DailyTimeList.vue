@@ -472,7 +472,7 @@ const isFutureDate = (date: string) => {
 thead {
   position: sticky;
   top: -1px;
-  z-index: 20;
+  z-index: 21;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
