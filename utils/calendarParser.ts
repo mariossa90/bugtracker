@@ -26,6 +26,12 @@ export function parseSubject(subject: string): ParsedUser[] {
 
 // User matching function
 export function findMatchingUser(parsedName: string, storeUsers: any[]): any | null {
+  // Specifically ignore K. Wagner
+  if (parsedName.toLowerCase().includes('k. wagner') || 
+      parsedName.toLowerCase().includes('k.wagner')) {
+    return null
+  }
+
   // Clean up the parsed name
   const cleanName = parsedName
     .replace(/\./g, ' ')  // Replace dots with spaces
