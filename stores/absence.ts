@@ -44,6 +44,31 @@ export const useAbsenceStore = defineStore('absence', {
             return
           }
 
+          // Handle company-wide holidays
+          if (event.subject.toLowerCase().includes('feiertag')) {
+            const startDate = new Date(event.start.dateTime)
+            const endDate = new Date(event.end.dateTime)
+            
+            // Adjust start date if it begins at midnight (00:00)
+            if (startDate.getHours() === 0 && 
+                startDate.getMinutes() === 0 && 
+                startDate.getSeconds() === 0) {
+              startDate.setDate(startDate.getDate() + 1)
+            }
+
+            // Add holiday for all users
+            userStore.users.forEach(user => {
+              this.addAbsence(user.name, {
+                type: 'Holiday',
+                startDate: startDate.toISOString().split('T')[0],
+                endDate: endDate.toISOString().split('T')[0],
+                isAllDay: event.isAllDay
+              })
+            })
+            return
+          }
+
+          // Process individual absences as before
           const parsedUsers = parseSubject(event.subject)
           parsedUsers.forEach(parsedUser => {
             const mondayUser = findMatchingUser(parsedUser.name, userStore.users)
