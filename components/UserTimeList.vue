@@ -42,7 +42,7 @@
                 <template v-for="(user, index) in uniqueUsers" :key="user">
                   <!-- User row -->
                   <tr class="group">
-                    <td class="h-12 py-4 pl-8 font-medium text-light-text-primary dark:text-white bg-gray-400/10 dark:bg-gray-900/70 border dark:border-gray-700">
+                    <td class="h-12 py-4 pl-8 font-medium text-light-text-primary dark:text-white bg-gray-400/10 dark:bg-gray-900/70 border dark:border-gray-700 relative">
                       <div class="flex flex-col gap-1 w-[250px]">
                         <!-- User info group -->
                         <div class="flex flex-col gap-2">
@@ -72,6 +72,17 @@
                           </div>
                         </div>
                       </div>
+
+                      <!-- Summary email button -->
+                      <button v-if="hasIssuesInPeriod(user)"
+                              @click="openSummaryEmailTemplate(user)"
+                              class="absolute top-0 right-0 text-base px-4 py-0.5 rounded-bl-lg shadow-sm flex items-center gap-2 transition-colors bg-orange-500 dark:bg-orange-600 text-white dark:text-white hover:bg-orange-600 dark:hover:bg-orange-700"
+                              :title="`There are ${getIssueCount(user)} time tracking issues in this ${props.selectedPeriod} period`">
+                        <div class="relative">
+                          <i class="far fa-envelope text-lg"></i>
+                          <i class="fas fa-circle-exclamation text-[0.85em] absolute -bottom-0 -right-3 border-2 border-orange-500 dark:border-orange-600 rounded-full"></i>
+                        </div>
+                      </button>
                     </td>
                     <td v-for="date in lastSevenDays" 
                         :key="date" 
@@ -234,9 +245,6 @@ const lastSevenDays = computed(() => {
   const startDate = new Date(props.selectedDate)
   startDate.setHours(0, 0, 0, 0)
   
-  let i = 0
-  let daysAdded = 0
-  
   // If period is 'total', get all available dates from dailyTimeStore
   if (props.selectedPeriod === 'total') {
     const allDates = dailyTimeStore.getDailyTimes
@@ -246,20 +254,40 @@ const lastSevenDays = computed(() => {
     return allDates
   }
   
-  const daysToShow = {
-    daily: 1,
-    weekly: 7,
-    monthly: 30,
-  }[props.selectedPeriod]
+  // Calculate start and end dates based on period
+  let daysToShow = 0
+  let startDayOffset = 0
   
-  while (daysAdded < daysToShow) {
+  switch (props.selectedPeriod) {
+    case 'daily':
+      daysToShow = 1
+      break
+      
+    case 'weekly':
+      daysToShow = 7
+      // Get to the start of the week (Monday)
+      const dayOfWeek = startDate.getDay()
+      startDayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek // If Sunday, go back 6 days, otherwise align to Monday
+      startDate.setDate(startDate.getDate() + startDayOffset)
+      break
+      
+    case 'monthly':
+      // Set to first day of the month
+      startDate.setDate(1)
+      // Calculate days in the month
+      const lastDay = new Date(startDate.getFullYear(), startDate.getMonth() + 1, 0)
+      daysToShow = lastDay.getDate()
+      break
+  }
+  
+  // Generate dates array
+  for (let i = 0; i < daysToShow; i++) {
     const date = new Date(startDate)
-    date.setDate(date.getDate() - i)
+    date.setDate(startDate.getDate() + i)
     
     // Skip weekends if hideWeekends is enabled
     const dayOfWeek = date.getDay()
     if (settingsStore.hideWeekends && (dayOfWeek === 0 || dayOfWeek === 6)) {
-      i++
       continue
     }
     
@@ -267,10 +295,8 @@ const lastSevenDays = computed(() => {
     const month = String(date.getMonth() + 1).padStart(2, '0')
     const day = String(date.getDate()).padStart(2, '0')
     dates.push(`${year}-${month}-${day}`)
-    
-    i++
-    daysAdded++
   }
+  
   return dates
 })
 
@@ -509,6 +535,117 @@ const openEmailTemplate = (user: string, date: string) => {
   document.body.appendChild(a)
   a.click()
   document.body.removeChild(a)
+}
+
+const hasIssuesInPeriod = (user: string) => {
+  if (!settingsStore.enableGoalEmails) return false
+  
+  return lastSevenDays.value.some(date => {
+    const status = calculateGoalStatus(getDailyTotal(user, date), user, date)
+    const isAbsent = getAbsenceInfo(user, date) !== null
+    return !isAbsent && (status === 'GOAL_MISSED' || status === 'GOAL_EXCEEDED')
+  })
+}
+
+const getSummaryEmailTitle = (user: string) => {
+  const issueCount = getIssueCount(user)
+  const periodType = props.selectedPeriod.toLowerCase()
+  return `Found ${issueCount} time tracking ${issueCount === 1 ? 'issue' : 'issues'} in this ${periodType} period`
+}
+
+const openSummaryEmailTemplate = (user: string) => {
+  const userEmail = userStore.users.find(u => u.name === user)?.email
+  if (!userEmail) return
+
+  const firstName = user.split(' ')[0]
+  const issues = lastSevenDays.value.reduce((acc, date) => {
+    const status = calculateGoalStatus(getDailyTotal(user, date), user, date)
+    const isAbsent = getAbsenceInfo(user, date) !== null
+    
+    if (!isAbsent && (status === 'GOAL_MISSED' || status === 'GOAL_EXCEEDED')) {
+      const hours = durationToHours(getDailyTotal(user, date))
+      const wholeHours = Math.floor(hours)
+      const minutes = Math.round((hours - wholeHours) * 60)
+      const timeFormatted = `${wholeHours}h ${minutes}m`
+      const goalHours = workGoalsStore.getEffectiveUserGoal(user, date)
+      const formattedDate = new Date(date).toLocaleDateString('en-US', { 
+        weekday: 'short', 
+        month: 'short', 
+        day: 'numeric' 
+      })
+
+      acc.push({
+        date: formattedDate,
+        status,
+        time: timeFormatted,
+        goal: goalHours
+      })
+    }
+    return acc
+  }, [] as Array<{ date: string, status: string, time: string, goal: number }>)
+
+  if (issues.length === 0) return
+
+  const periodType = props.selectedPeriod.charAt(0).toUpperCase() + props.selectedPeriod.slice(1)
+  const missedGoals = issues.filter(i => i.status === 'GOAL_MISSED').length
+  const exceededGoals = issues.filter(i => i.status === 'GOAL_EXCEEDED').length
+  
+  const subject = `[Monday] Time Tracking Issues - ${periodType} Summary`
+  
+  let body = `Hi ${firstName},\n\n`
+  body += `There are some time tracking discrepancies found in your ${periodType.toLowerCase()} entries. `
+  body += `There ${issues.length === 1 ? 'is 1 issue' : `are ${issues.length} issues`} that need your attention:\n\n`
+  
+  if (missedGoals > 0) {
+    body += `Missed Goals (${missedGoals}):\n`
+    issues.forEach(issue => {
+      if (issue.status === 'GOAL_MISSED') {
+        body += `• ${issue.date}: Logged ${issue.time} (${issue.goal}h goal not met)\n`
+      }
+    })
+    body += '\n'
+  }
+  
+  if (exceededGoals > 0) {
+    body += `Exceeded Goals (${exceededGoals}):\n`
+    issues.forEach(issue => {
+      if (issue.status === 'GOAL_EXCEEDED') {
+        body += `• ${issue.date}: Logged ${issue.time} (exceeds ${issue.goal}h goal)\n`
+      }
+    })
+    body += '\n'
+  }
+  
+  body += 'Please:\n'
+  body += '1. Review these entries for accuracy\n'
+  body += '2. Update any incorrect time logs\n'
+  body += '3. Ensure all timers are properly stopped\n'
+  
+  if (exceededGoals > 0) {
+    body += '\nIf the overtime entries are correct, please make sure to maintain a healthy work-life balance.'
+  }
+  
+  body += '\n\nBest regards'
+
+  const mailtoLink = `mailto:${userEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+  
+  const a = document.createElement('a')
+  a.href = mailtoLink
+  a.target = '_blank'
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+}
+
+const getIssueCount = (user: string) => {
+  return lastSevenDays.value.reduce((count, date) => {
+    const status = calculateGoalStatus(getDailyTotal(user, date), user, date)
+    const isAbsent = getAbsenceInfo(user, date) !== null
+    if (!isAbsent && (status === 'GOAL_MISSED' || status === 'GOAL_EXCEEDED')) {
+      return count + 1
+    }
+    return count
+  }, 0)
 }
 </script>
 

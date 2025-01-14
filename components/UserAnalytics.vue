@@ -3,7 +3,7 @@
     <!-- Period Selection -->
     <div class="flex flex-col items-end gap-1">
       <div class="flex items-center justify-between w-full gap-4">
-        <div class="flex flex-wrap gap-2">
+        <div class="flex flex-wrap gap-2 max-w-[70%]">
           <button
             v-for="user in availableUsers"
             :key="user"
@@ -29,7 +29,7 @@
           </button>
         </div>
 
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-4 flex-shrink-0">
           <div class="flex items-center gap-2">
             <button 
               @click="navigatePeriod(-1)"
