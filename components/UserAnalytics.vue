@@ -1,10 +1,10 @@
 <template>
-  <div id="user-analytics-container" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 overflow-x-auto min-w-[1024px]">
+  <div id="user-analytics-container" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 overflow-auto min-w-[1024px] max-h-[calc(100vh-104px)]">
     <!-- Period Selection -->
     <div id="period-selection-container" class="flex flex-col items-end gap-1">
       <div id="controls-row" class="flex items-center justify-between w-full gap-4">
         <div id="user-selection" class="flex flex-wrap gap-2 lg:max-w-[60%] xl:max-w-[65%] 2xl:max-w-[70%] max-h-[5.5rem] overflow-y-auto">
-          <div class="flex flex-wrap gap-2 w-full">
+          <div class="flex flex-wrap gap-1 w-full">
             <button
               v-for="user in availableUsers"
               :key="user"
@@ -95,10 +95,10 @@
     </div>
 
     <!-- User Tasks Charts -->
-    <div id="charts-container" class="mt-6 overflow-y-auto max-h-[calc(100vh-20rem)]">
+    <div id="charts-container" class="mt-6 h-auto">
       <div class="grid grid-cols-12 gap-6">
         <!-- Left Column (Bar Charts) -->
-        <div id="bar-charts-column" class="col-span-6 flex flex-col h-[55vh]">
+        <div id="bar-charts-column" class="col-span-6 flex flex-col h-[54vh]">
           <div id="bar-chart-header" class="flex items-center justify-between mb-4">
             <h3 id="bar-chart-title" class="text-lg font-medium text-gray-800 dark:text-gray-200">
               {{ showTimeChart ? 'Time Tracked' : 'Assigned Tasks' }}
@@ -134,7 +134,7 @@
           </div>
           
           <!-- Combined Chart Container -->
-          <div id="bar-chart-container" class="bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm h-[calc(55vh-4rem)]">
+          <div id="bar-chart-container" class="bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm h-[calc(54vh-4rem)]">
             <div v-if="selectedUser" class="h-full">
               <Chart 
                 v-if="!showTimeChart"
@@ -158,7 +158,7 @@
         </div>
 
         <!-- Middle Column (Pie Charts) -->
-        <div id="pie-charts-column" class="col-span-3 flex flex-col h-[55vh]">
+        <div id="pie-charts-column" class="col-span-3 flex flex-col h-[54vh]">
           <div id="pie-chart-header" class="flex items-center justify-between mb-4">
             <h3 id="pie-chart-title" class="text-lg font-medium text-gray-800 dark:text-gray-200 truncate">
               {{ showTimePieChart ? 'Time Distribution' : 'Tasks Distribution' }}
@@ -194,7 +194,7 @@
           </div>
           
           <!-- Combined Pie Chart Container -->
-          <div id="pie-chart-container" class="bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm h-[calc(55vh-4rem)]">
+          <div id="pie-chart-container" class="bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm h-[calc(54vh-4rem)]">
             <div v-if="selectedUser" class="h-full">
               <Chart 
                 v-if="!showTimePieChart"
@@ -218,9 +218,9 @@
         </div>
 
         <!-- Task Details Column -->
-        <div id="task-details-column" class="col-span-3 flex flex-col h-[55vh]">
+        <div id="task-details-column" class="col-span-3 flex flex-col h-[54vh]">
           <h3 id="task-details-title" class="text-lg font-medium text-gray-800 dark:text-gray-200 mb-5">Task Details</h3>
-          <div id="task-details-container" class="bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm h-[calc(55vh-4rem)] overflow-auto">
+          <div id="task-details-container" class="bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm h-[calc(54vh-4rem)] overflow-auto">
             <div v-if="selectedUser" class="space-y-2 h-full overflow-y-auto">
               <!-- Summary Section -->
               <div id="summary-section" class="mb-6 grid grid-cols-2 gap-4">

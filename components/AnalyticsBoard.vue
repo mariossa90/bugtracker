@@ -1,9 +1,9 @@
 <template>
-  <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
+  <div id="analytics-board" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 max-h-[calc(100vh-64px)] overflow-y-auto">
     <!-- Period Selection -->
-    <div class="flex flex-col items-end gap-1">
-      <div class="flex items-center gap-4">
-        <div class="flex items-center gap-2">
+    <div id="period-selection" class="flex flex-col items-end gap-1">
+      <div id="period-controls" class="flex items-center gap-4">
+        <div id="date-navigation" class="flex items-center gap-2">
           <button 
             @click="navigatePeriod(-1)"
             class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -34,7 +34,7 @@
           </button>
         </div>
 
-        <div class="flex rounded-lg shadow-sm">
+        <div id="period-buttons" class="flex rounded-lg shadow-sm">
           <button 
             v-for="period in periods" 
             :key="period.value"
@@ -54,21 +54,22 @@
       </div>
 
       <!-- Date Range Display -->
-      <div class="text-sm text-gray-600 dark:text-gray-400">
+      <div id="date-range-display" class="text-sm text-gray-600 dark:text-gray-400">
         {{ dateRangeText }}
       </div>
     </div>
 
-    <!-- Project Tasks Chart -->
-    <div>
-      <h3 class="text-lg font-medium text-gray-800 dark:text-gray-200 mb-4">Tasks by Project</h3>
-      <Chart type="bar" :data="tasksChartData" :options="tasksChartOptions" class="h-[400px]" />
-    </div>
+    <!-- Charts Section -->
+    <div class="flex flex-col gap-8  h-[calc(90vh-100px)]">
+      <div id="tasks-chart-container">
+        <h3 class="text-lg font-medium text-gray-800 dark:text-gray-200 mb-1">Tasks by Project</h3>
+        <Chart id="tasks-chart" type="bar" :data="tasksChartData" :options="tasksChartOptions" class="h-[calc(44vh-100px)]" />
+      </div>
 
-    <!-- Project Time Chart -->
-    <div class="mt-8">
-      <h3 class="text-lg font-medium text-gray-800 dark:text-gray-200 mb-4">Time Tracked by Project</h3>
-      <Chart type="bar" :data="timeChartData" :options="timeChartOptions" class="h-[400px]" />
+      <div id="time-chart-container">
+        <h3 class="text-lg font-medium text-gray-800 dark:text-gray-200 mb-1">Time Tracked by Project</h3>
+        <Chart id="time-chart" type="bar" :data="timeChartData" :options="timeChartOptions" class="h-[calc(44vh-100px)]" />
+      </div>
     </div>
   </div>
 </template>
