@@ -215,6 +215,7 @@ import { useUserStore } from '~/stores/userStore'
 import { useWorkGoalsStore } from '~/stores/workGoals'
 import { useUserName } from '~/composables/useUserName'
 import { useAbsenceStore } from '~/stores/absence'
+import { useEmailTemplateStore } from '~/stores/emailTemplates'
 
 const mondayStore = useMondayStore()
 const dailyTimeStore = useDailyTimeStore()
@@ -482,19 +483,22 @@ const openEmailTemplate = (user: string, date: string) => {
     month: 'short', 
     day: 'numeric' 
   })
-  
-  let subject, body
-  
-  if (status === 'GOAL_MISSED') {
-    subject = `[Monday] Missed Work Goal on ${emailDate}`
-    body = `Hi ${firstName},\n\nI noticed that you logged ${timeFormatted} on ${emailDate}, which is below the daily goal of ${goalHours}h.\nPlease make sure to log your time accurately. \n\nBest regards`
-  } else {
-    subject = `Overtime Notice for ${emailDate}`
-    body = `Hi ${firstName},\n\nI noticed that you logged ${timeFormatted} on ${emailDate}, which is more than double the daily goal of ${goalHours}h. Please check if you forgot to stop the timer on a ticket, or if its correct make sure to maintain a healthy work-life balance.\n\nBest regards`
+
+  const emailTemplateStore = useEmailTemplateStore()
+  const templateType = status === 'GOAL_MISSED' ? 'daily_missed' : 'daily_overtime'
+  const template = emailTemplateStore.getTemplateByType(templateType)
+
+  if (!template) return
+
+  const variables = {
+    firstName,
+    date: emailDate,
+    timeLogged: timeFormatted,
+    goalHours: goalHours.toString()
   }
 
+  const { subject, body } = emailTemplateStore.replaceVariables(template, variables)
   const mailtoLink = `mailto:${userEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
-  console.log('Attempting to open email with:', mailtoLink)
 
   // Create and click a temporary anchor element
   const a = document.createElement('a')
@@ -503,22 +507,6 @@ const openEmailTemplate = (user: string, date: string) => {
   document.body.appendChild(a)
   a.click()
   document.body.removeChild(a)
-}
-
-const hasIssuesInPeriod = (user: string) => {
-  if (!settingsStore.enableGoalEmails) return false
-  
-  return lastSevenDays.value.some(date => {
-    const status = calculateGoalStatus(getDailyTotal(user, date), user, date)
-    const isAbsent = getAbsenceInfo(user, date) !== null
-    return !isAbsent && (status === 'GOAL_MISSED' || status === 'GOAL_EXCEEDED')
-  })
-}
-
-const getSummaryEmailTitle = (user: string) => {
-  const issueCount = getIssueCount(user)
-  const periodType = props.selectedPeriod.toLowerCase()
-  return `Found ${issueCount} time tracking ${issueCount === 1 ? 'issue' : 'issues'} in this ${periodType} period`
 }
 
 const openSummaryEmailTemplate = (user: string) => {
@@ -555,46 +543,47 @@ const openSummaryEmailTemplate = (user: string) => {
   if (issues.length === 0) return
 
   const periodType = props.selectedPeriod.charAt(0).toUpperCase() + props.selectedPeriod.slice(1)
-  const missedGoals = issues.filter(i => i.status === 'GOAL_MISSED').length
-  const exceededGoals = issues.filter(i => i.status === 'GOAL_EXCEEDED').length
+  const missedGoals = issues.filter(i => i.status === 'GOAL_MISSED')
+  const exceededGoals = issues.filter(i => i.status === 'GOAL_EXCEEDED')
   
-  const subject = `[Monday] Time Tracking Issues - ${periodType} Summary`
+  const emailTemplateStore = useEmailTemplateStore()
+  const template = emailTemplateStore.getTemplateByType('weekly_summary')
   
-  let body = `Hi ${firstName},\n\n`
-  body += `There are some time tracking discrepancies found in your ${periodType.toLowerCase()} entries. `
-  body += `There ${issues.length === 1 ? 'is 1 issue' : `are ${issues.length} issues`} that need your attention:\n\n`
-  
-  if (missedGoals > 0) {
-    body += `Missed Goals (${missedGoals}):\n`
-    issues.forEach(issue => {
-      if (issue.status === 'GOAL_MISSED') {
-        body += `• ${issue.date}: Logged ${issue.time} (${issue.goal}h goal not met)\n`
-      }
-    })
-    body += '\n'
-  }
-  
-  if (exceededGoals > 0) {
-    body += `Exceeded Goals (${exceededGoals}):\n`
-    issues.forEach(issue => {
-      if (issue.status === 'GOAL_EXCEEDED') {
-        body += `• ${issue.date}: Logged ${issue.time} (exceeds ${issue.goal}h goal)\n`
-      }
-    })
-    body += '\n'
-  }
-  
-  body += 'Please:\n'
-  body += '1. Review these entries for accuracy\n'
-  body += '2. Update any incorrect time logs\n'
-  body += '3. Ensure all timers are properly stopped\n'
-  
-  if (exceededGoals > 0) {
-    body += '\nIf the overtime entries are correct, please make sure to maintain a healthy work-life balance.'
-  }
-  
-  body += '\n\nBest regards'
+  if (!template) return
 
+  // Build missed goals section if any
+  let missedGoalsSection = ''
+  if (missedGoals.length > 0) {
+    missedGoalsSection = `Missed Goals (${missedGoals.length}):\n`
+    missedGoals.forEach(issue => {
+      missedGoalsSection += `• ${issue.date}: Logged ${issue.time} (${issue.goal}h goal not met)\n`
+    })
+    missedGoalsSection += '\n'
+  }
+
+  // Build exceeded goals section if any
+  let exceededGoalsSection = ''
+  if (exceededGoals.length > 0) {
+    exceededGoalsSection = `Exceeded Goals (${exceededGoals.length}):\n`
+    exceededGoals.forEach(issue => {
+      exceededGoalsSection += `• ${issue.date}: Logged ${issue.time} (exceeds ${issue.goal}h goal)\n`
+    })
+    exceededGoalsSection += '\n'
+  }
+
+  const variables = {
+    firstName,
+    periodType: periodType.toLowerCase(),
+    issueCount: issues.length.toString(),
+    isPlural: issues.length === 1 ? 'is' : 'are',
+    issueText: issues.length === 1 ? 'issue' : 'issues',
+    needsS: issues.length === 1 ? 's' : '',
+    missedGoalsSection,
+    exceededGoalsSection,
+    overtimeNote: exceededGoals.length > 0 ? '\nIf the overtime entries are correct, please make sure to maintain a healthy work-life balance.' : ''
+  }
+
+  const { subject, body } = emailTemplateStore.replaceVariables(template, variables)
   const mailtoLink = `mailto:${userEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
   
   const a = document.createElement('a')
@@ -603,6 +592,22 @@ const openSummaryEmailTemplate = (user: string) => {
   document.body.appendChild(a)
   a.click()
   document.body.removeChild(a)
+}
+
+const hasIssuesInPeriod = (user: string) => {
+  if (!settingsStore.enableGoalEmails) return false
+  
+  return lastSevenDays.value.some(date => {
+    const status = calculateGoalStatus(getDailyTotal(user, date), user, date)
+    const isAbsent = getAbsenceInfo(user, date) !== null
+    return !isAbsent && (status === 'GOAL_MISSED' || status === 'GOAL_EXCEEDED')
+  })
+}
+
+const getSummaryEmailTitle = (user: string) => {
+  const issueCount = getIssueCount(user)
+  const periodType = props.selectedPeriod.toLowerCase()
+  return `Found ${issueCount} time tracking ${issueCount === 1 ? 'issue' : 'issues'} in this ${periodType} period`
 }
 
 const getIssueCount = (user: string) => {

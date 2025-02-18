@@ -189,6 +189,7 @@ import { useUserStore } from '~/stores/userStore'
 import { useWorkGoalsStore } from '~/stores/workGoals'
 import { useUserName } from '~/composables/useUserName'
 import { useAbsenceStore } from '~/stores/absence'
+import { useEmailTemplateStore } from '~/stores/emailTemplates'
 
 const mondayStore = useMondayStore()
 const dailyTimeStore = useDailyTimeStore()
@@ -423,19 +424,22 @@ const openEmailTemplate = (user: string, date: string) => {
     month: 'short', 
     day: 'numeric' 
   })
-  
-  let subject, body
-  
-  if (status === 'GOAL_MISSED') {
-    subject = `[Monday] Missed Work Goal on ${emailDate}`
-    body = `Hi ${firstName},\n\nI noticed that you logged ${timeFormatted} on ${emailDate}, which is below the daily goal of ${goalHours}h.\nPlease make sure to log your time accurately. \n\nBest regards`
-  } else {
-    subject = `Overtime Notice for ${emailDate}`
-    body = `Hi ${firstName},\n\nI noticed that you logged ${timeFormatted} on ${emailDate}, which is more than double the daily goal of ${goalHours}h. Please check if you forgot to stop the timer on a ticket, or if its correct make sure to maintain a healthy work-life balance.\n\nBest regards`
+
+  const emailTemplateStore = useEmailTemplateStore()
+  const templateType = status === 'GOAL_MISSED' ? 'daily_missed' : 'daily_overtime'
+  const template = emailTemplateStore.getTemplateByType(templateType)
+
+  if (!template) return
+
+  const variables = {
+    firstName,
+    date: emailDate,
+    timeLogged: timeFormatted,
+    goalHours: goalHours.toString()
   }
 
+  const { subject, body } = emailTemplateStore.replaceVariables(template, variables)
   const mailtoLink = `mailto:${userEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
-  console.log('Attempting to open email with:', mailtoLink)
 
   // Create and click a temporary anchor element
   const a = document.createElement('a')

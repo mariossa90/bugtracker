@@ -126,9 +126,53 @@
             ></span>
           </button>
         </div>
+
+        <!-- Email Template Editor Button -->
+        <div v-if="settingsStore.enableGoalEmails" class="flex items-center justify-between px-4 py-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors duration-200">
+          <div class="flex flex-col">
+            <span class="text-sm text-light-text-primary dark:text-white">Email Templates</span>
+            <span class="text-sm text-gray-500 dark:text-gray-400">Customize email notification templates</span>
+          </div>
+          <button
+            @click="showTemplateEditor = true"
+            class="px-3 py-1.5 rounded-lg text-sm font-medium bg-[#5bbcaa] text-white hover:bg-[#4aa899] transition-colors flex items-center gap-2"
+          >
+            <i class="fas fa-envelope"></i>
+            Edit Templates
+          </button>
+        </div>
       </div>
     </div>
   </div>
+
+  <!-- Email Template Editor Modal -->
+  <Teleport to="body">
+    <div v-if="showTemplateEditor" class="fixed inset-0 z-50 overflow-y-auto">
+      <!-- Backdrop -->
+      <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" @click="showTemplateEditor = false"></div>
+      
+      <!-- Modal -->
+      <div class="relative min-h-screen flex items-center justify-center p-4">
+        <div class="relative w-full max-w-6xl bg-white dark:bg-gray-800 rounded-xl shadow-xl">
+          <!-- Modal Header -->
+          <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+            <h2 class="text-xl font-semibold text-light-text-primary dark:text-white">Email Templates</h2>
+            <button 
+              @click="showTemplateEditor = false"
+              class="p-2 rounded-lg text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            >
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          
+          <!-- Modal Content -->
+          <div class="p-6">
+            <EmailTemplateEditor />
+          </div>
+        </div>
+      </div>
+    </div>
+  </Teleport>
 </template>
 
 <style scoped>
@@ -175,9 +219,11 @@ input[type="number"] {
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { useSettingsStore } from '~/stores/settings'
+import EmailTemplateEditor from '~/components/EmailTemplateEditor.vue'
 
 const settingsStore = useSettingsStore()
 const selectedTheme = ref(settingsStore.theme)
+const showTemplateEditor = ref(false)
 
 const toggleAutoUpdate = () => {
   settingsStore.autoUpdate = !settingsStore.autoUpdate
