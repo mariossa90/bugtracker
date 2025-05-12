@@ -92,7 +92,7 @@ export const useSettingsStore = defineStore('settings', {
           color: '#adf0cd',
         },
         goalPartial: {
-          color: '#fbbf24',
+          color: '#dafbea',
         },
         goalMissed: {
           color: '#fca5a5',
@@ -206,7 +206,7 @@ export const useSettingsStore = defineStore('settings', {
         light: {
           textColor: '#374151',
           goalMet: { color: '#adf0cd' },
-          goalPartial: { color: '#fbbf24' },
+          goalPartial: { color: '#dafbea' },
           goalMissed: { color: '#fca5a5' },
           weekendNoTime: { color: '#f9fafb' },
           goalExceeded: { color: 'rgba(251, 146, 60, 0.2)' }
@@ -214,7 +214,7 @@ export const useSettingsStore = defineStore('settings', {
         dark: {
           textColor: '#f5f5f5',
           goalMet: { color: '#277c48' },
-          goalPartial: { color: '#9a7c28' },
+          goalPartial: { color: '#dafbea' },
           goalMissed: { color: '#762828' },
           weekendNoTime: { color: '#111827' },
           goalExceeded: { color: 'rgba(251, 146, 60, 0.1)' }

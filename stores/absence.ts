@@ -87,6 +87,7 @@ export const useAbsenceStore = defineStore('absence', {
               let mappedReason = parsedUser.reason || 'Vacation'
               switch (mappedReason) {
                 case 'DR':
+                case 'Dr':
                   mappedReason = 'Business Trip'
                   break
                 case 'Urlaub':
