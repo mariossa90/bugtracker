@@ -30,7 +30,7 @@ export const useWorkGoals = () => {
     if (goalHours === null) return 'GOAL_NOT_SET'
     if (hours >= goalHours * 2) return 'GOAL_EXCEEDED'
     if (hours >= goalHours) return 'GOAL_MET'
-    if (hours >= goalHours * 0.7) return 'GOAL_PARTIAL'
+    if (hours >= goalHours * 0.4) return 'GOAL_PARTIAL'
     return 'GOAL_MISSED'
   }
 

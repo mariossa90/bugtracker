@@ -101,7 +101,7 @@ export const useSettingsStore = defineStore('settings', {
           color: '#f9fafb',
         },
         goalExceeded: {
-          color: 'rgba(251, 146, 60, 0.2)'
+          color: '#fca5a5',
         }
       },
       dark: {
@@ -110,7 +110,7 @@ export const useSettingsStore = defineStore('settings', {
           color: '#277c48',
         },
         goalPartial: {
-          color: '#9a7c28',
+          color: '#3aa664',
         },
         goalMissed: {
           color: '#762828',
@@ -119,7 +119,7 @@ export const useSettingsStore = defineStore('settings', {
           color: '#111827',
         },
         goalExceeded: {
-          color: 'rgba(251, 146, 60, 0.1)'
+          color: '#fca5a5',
         }
       }
     },
@@ -209,15 +209,15 @@ export const useSettingsStore = defineStore('settings', {
           goalPartial: { color: '#dafbea' },
           goalMissed: { color: '#fca5a5' },
           weekendNoTime: { color: '#f9fafb' },
-          goalExceeded: { color: 'rgba(251, 146, 60, 0.2)' }
+          goalExceeded: { color: '#fca5a5' }
         },
         dark: {
           textColor: '#f5f5f5',
           goalMet: { color: '#277c48' },
-          goalPartial: { color: '#dafbea' },
+          goalPartial: { color: '#3aa664' },
           goalMissed: { color: '#762828' },
           weekendNoTime: { color: '#111827' },
-          goalExceeded: { color: 'rgba(251, 146, 60, 0.1)' }
+          goalExceeded: { color: '#762828' }
         }
       }
     },
