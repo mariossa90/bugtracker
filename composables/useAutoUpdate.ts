@@ -2,11 +2,13 @@ import { ref, onUnmounted, watch, onMounted } from 'vue'
 import { useSettingsStore } from '~/stores/settings'
 import { useMonday } from '~/composables/useMonday'
 import { useDailyTime } from '~/composables/useDailyTime'
+import { useCalendarStore } from '~/stores/calendar'
 
 export function useAutoUpdate() {
   const settingsStore = useSettingsStore()
   const { fetchBoardData } = useMonday()
   const { processDailyTime } = useDailyTime()
+  const calendarStore = useCalendarStore()
   
   let updateInterval: NodeJS.Timeout | null = null
   const secondsLeft = ref(0)
@@ -30,8 +32,13 @@ export function useAutoUpdate() {
         } else {
           // Reset countdown and fetch data
           secondsLeft.value = settingsStore.updateInterval * 60
+          
+          // Always fetch Monday data during auto-update
           await fetchBoardData()
           await processDailyTime()
+          
+          // Optionally fetch calendar data (it has its own smart caching)
+          await calendarStore.fetchCalendarData()
         }
       }, 1000)
     }

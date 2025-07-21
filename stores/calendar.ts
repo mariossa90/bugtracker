@@ -24,13 +24,13 @@ export const useCalendarStore = defineStore('calendar', {
   },
 
   actions: {
-    async fetchCalendarData() {
+    async fetchCalendarData(force = false) {
       const { fetchCalendarEvents } = useGraph()
       const absenceStore = useAbsenceStore()
       const settingsStore = useSettingsStore()
       
-      // Check if we need to fetch
-      if (this.lastFetch) {
+      // Check if we need to fetch (skip check if force is true)
+      if (!force && this.lastFetch) {
         const updateIntervalHours = settingsStore.calendarUpdateInterval || 6 // fallback to 6 hours
         const updateInterval = new Date(Date.now() - updateIntervalHours * 60 * 60 * 1000)
         if (new Date(this.lastFetch) > updateInterval) {

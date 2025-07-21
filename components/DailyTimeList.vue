@@ -76,19 +76,27 @@
                       ]"
                   >
                     <span v-if="getAbsenceInfo(user, date)" 
-                          class="absolute top-0 right-0 text-base px-4 py-0.5 rounded-bl-lg bg-blue-500 dark:bg-blue-600 text-white dark:text-white flex items-center gap-2 shadow-sm"
-                    >
-                      <i v-if="getAbsenceInfo(user, date) === 'Sick Leave'" 
-                      class="fa-solid fa-house-medical"> 
-                      </i> 
-                      <i v-if="getAbsenceInfo(user, date) === 'Vacation'" 
-                         class="fa-solid fa-umbrella-beach">
-                      </i>
-                      <i v-if="getAbsenceInfo(user, date) === 'Business Trip'" 
-                         class="fa-solid fa-plane-departure">
-                      </i>
-                      {{ getAbsenceInfo(user, date) }}
-                    </span>
+                            class="absolute top-0 right-0 text-base px-4 py-0.5 rounded-bl-lg text-white dark:text-white flex items-center gap-2 shadow-sm"
+                            :class="{
+                              'bg-blue-500 dark:bg-blue-600': getAbsenceInfo(user, date) === 'Vacation' || getAbsenceInfo(user, date) === 'Business Trip',
+                              'bg-amber-600 dark:bg-amber-700': getAbsenceInfo(user, date) === 'Sick Leave',
+                              'bg-yellow-500 dark:bg-yellow-600': getAbsenceInfo(user, date) === 'Holiday'
+                            }"
+                      >
+                        <i v-if="getAbsenceInfo(user, date) === 'Sick Leave'" 
+                        class="fa-solid fa-house-medical"> 
+                        </i> 
+                        <i v-if="getAbsenceInfo(user, date) === 'Vacation'" 
+                           class="fa-solid fa-umbrella-beach">
+                        </i>
+                        <i v-if="getAbsenceInfo(user, date) === 'Business Trip'" 
+                           class="fa-solid fa-plane-departure">
+                        </i>
+                        <i v-if="getAbsenceInfo(user, date) === 'Holiday'" 
+                           class="fa-solid fa-sun"> 
+                        </i>
+                        {{ getAbsenceInfo(user, date) }}
+                      </span>
                     
                     <div class="flex flex-col items-center justify-center gap-1 mt-2">
                       <div class="flex items-center gap-2">

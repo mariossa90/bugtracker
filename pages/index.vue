@@ -9,23 +9,30 @@
               <CurrentDateTime />
             </div>
           </div>
-          <div class="flex gap-4">
+          <div class="flex gap-2">
             <ApiResponseTime :response-time="lastResponseTime" />
             <Button      
-              class="bg-[#5bbcaa] hover:bg-[#4ca899] text-white px-4 py-2 rounded-lg transition-colors w-48 inline-block disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#5bbcaa]"
-              :disabled="isLoading"
-              @click="fetchBoardData"
+              class="bg-[#5bbcaa] hover:bg-[#4ca899] text-white px-4 py-2 rounded-lg transition-colors w-44 inline-block disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#5bbcaa]"
+              :disabled="isMondayLoading"
+              @click="fetchMondayData"
             >
               <div class="flex flex-col items-center gap-0.5">
                 <span class="font-medium">
-                  {{ isLoading 
-                      ? (isCalendarLoading 
-                          ? 'Fetching Calendar...' 
-                          : 'Updating...') 
-                      : 'Update Board Data' 
-                  }}
+                  {{ isMondayLoading ? 'Updating Monday...' : 'Update Monday Data' }}
                 </span>
                 <AutoUpdateCountdown ref="countdownRef" class="text-white/90" />
+              </div>
+            </Button>
+            <Button      
+              class="bg-[#4f46e5] hover:bg-[#4338ca] text-white px-4 py-2 rounded-lg transition-colors w-44 inline-block disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#4f46e5]"
+              :disabled="isCalendarLoading"
+              @click="fetchCalendarData"
+            >
+              <div class="flex flex-col items-center gap-0.5">
+                <span class="font-medium">
+                  {{ isCalendarLoading ? 'Updating Calendar...' : 'Update Calendar' }}
+                </span>
+                <span class="text-xs opacity-75">Last: {{ lastCalendarUpdate }}</span>
               </div>
             </Button>
             <button
@@ -281,13 +288,69 @@ const saveSettings = () => {
 const countdownRef = ref()
 
 const isLoading = ref(false)
+const isMondayLoading = ref(false)
+const isCalendarLoading = ref(false)
 const error = ref<string | null>(null)
 const lastResponseTime = ref<number | null>(null)
 
 const activeBoard = ref('time-tracking')
 
-const isCalendarLoading = ref(false)
+const lastCalendarUpdate = computed(() => {
+  if (calendarStore.lastFetch) {
+    return new Date(calendarStore.lastFetch).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  }
+  return 'Never'
+})
 
+const fetchMondayData = async () => {
+  if (!settingsStore.canUpdateBoard) {
+    // Show password prompt dialog
+    const password = await prompt('Enter password to update board:')
+    if (!password || !settingsStore.validatePassword(password)) {
+      error.value = 'Invalid password'
+      return
+    }
+  }
+
+  isMondayLoading.value = true
+  error.value = null
+  const startTime = performance.now()
+  
+  try {
+    await fetchBoardDataFromMonday()
+    const endTime = performance.now()
+    lastResponseTime.value = (endTime - startTime) / 1000 // Convert to seconds
+    
+    // Process the data after fetching
+    await processDailyTime()
+    
+    // Reset auto-update countdown if enabled
+    if (countdownRef.value?.resetCountdown) {
+      countdownRef.value.resetCountdown()
+    }
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : 'An error occurred while fetching Monday data'
+    lastResponseTime.value = null
+  } finally {
+    isMondayLoading.value = false
+  }
+}
+
+const fetchCalendarData = async () => {
+  isCalendarLoading.value = true
+  error.value = null
+  
+  try {
+    // Force calendar update by passing true to bypass smart caching
+    await calendarStore.fetchCalendarData(true)
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : 'An error occurred while fetching calendar data'
+  } finally {
+    isCalendarLoading.value = false
+  }
+}
+
+// Keep the original combined function for backward compatibility and auto-update
 const fetchBoardData = async () => {
   if (!settingsStore.canUpdateBoard) {
     // Show password prompt dialog
@@ -299,6 +362,7 @@ const fetchBoardData = async () => {
   }
 
   isLoading.value = true
+  isMondayLoading.value = true
   isCalendarLoading.value = false
   error.value = null
   const startTime = performance.now()
@@ -316,6 +380,7 @@ const fetchBoardData = async () => {
     lastResponseTime.value = null
   } finally {
     isLoading.value = false
+    isMondayLoading.value = false
     isCalendarLoading.value = false
   }
   await processDailyTime()
