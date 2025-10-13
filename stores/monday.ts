@@ -135,7 +135,7 @@ export const useMondayStore = defineStore('monday', {
           const cursorConditions = Array.from(boardCursors.entries())
             .map(([boardId, cursor]) => `
               board_${boardId}: boards(ids: [${boardId}]) {
-                items_page(limit: 300${cursor ? `, cursor: "${cursor}"` : ''}) {
+                items_page(limit: 200${cursor ? `, cursor: "${cursor}"` : ''}) {
                   cursor
                   items {
                     id
