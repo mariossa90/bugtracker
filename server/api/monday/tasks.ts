@@ -48,8 +48,6 @@ export default defineEventHandler(async (event) => {
       },
       body: JSON.stringify(mondayRequest)
     })
-    
-    console.log('Response from Monday.com:', response)
 
     if (response.errors?.length) {
       console.error('Monday.com GraphQL errors:', response.errors)

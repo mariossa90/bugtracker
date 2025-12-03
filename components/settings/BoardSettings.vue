@@ -52,9 +52,17 @@
 
       <!-- Current Boards -->
       <div v-if="settingsStore.boardIds.length > 0" class="px-4 py-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors duration-200">
-        <div class="flex flex-col mb-3">
-          <span class="text-sm text-light-text-primary dark:text-white">Current Boards</span>
-          <span class="text-sm text-gray-500 dark:text-gray-400">List of boards currently being tracked</span>
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex flex-col">
+            <span class="text-sm text-light-text-primary dark:text-white">Current Boards</span>
+            <span class="text-sm text-gray-500 dark:text-gray-400">List of boards currently being tracked</span>
+          </div>
+          <button
+            @click="clearAllBoards"
+            class="px-3 py-1.5 text-xs font-medium text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 border border-red-300 dark:border-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors duration-200"
+          >
+            Clear All
+          </button>
         </div>
         <div class="space-y-2">
           <div
@@ -92,10 +100,7 @@ import { ref } from 'vue'
 import { useSettingsStore } from '~/stores/settings'
 
 const PREDEFINED_BOARDS = [
-  { id: '1340048713', name: 'General' },
-  { id: '1701828896', name: 'Rax' },
-  { id: '1540140210', name: 'Attersee' },
-  { id: '1685995280', name: 'Hallstatt' }
+  { id: '2154669988', name: 'Bugs Queue' }
 ] as const
 
 const settingsStore = useSettingsStore()
@@ -114,6 +119,12 @@ const addBoard = () => {
   if (newBoardId.value && !settingsStore.boardIds.includes(newBoardId.value)) {
     settingsStore.addBoardId(newBoardId.value)
     newBoardId.value = ''
+  }
+}
+
+const clearAllBoards = () => {
+  if (confirm('Are you sure you want to remove all boards?')) {
+    settingsStore.boardIds.forEach(id => settingsStore.removeBoardId(id))
   }
 }
 </script>

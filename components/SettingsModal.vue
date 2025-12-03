@@ -2,8 +2,7 @@
   <div v-if="isOpen" class="no-select fixed inset-0 z-50 overflow-y-auto">
     <!-- Backdrop -->
     <div 
-      class="fixed inset-0 transition-opacity duration-300" 
-      :class="{ 'backdrop-transparent': isTableSettings }"
+      class="fixed inset-0 transition-opacity duration-300"
       @click="close"
     >
       <div class="backdrop"></div>
@@ -54,17 +53,6 @@
                 General
               </button>
               <button
-                @click="settingsStore.selectedMenu = 'table'"
-                :class="[
-                  'w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors',
-                  selectedMenu === 'table'
-                    ? 'bg-[#5bbcaa] bg-opacity-10 text-[#5bbcaa]'
-                    : 'text-light-text-secondary dark:text-gray-300 hover:bg-light-secondary dark:hover:bg-gray-700/50'
-                ]"
-              >
-                Table
-              </button>
-              <button
                 @click="settingsStore.selectedMenu = 'boards'"
                 :class="[
                   'w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors',
@@ -74,39 +62,6 @@
                 ]"
               >
                 Boards
-              </button>
-              <button
-                @click="settingsStore.selectedMenu = 'userVisibility'"
-                :class="[
-                  'w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors',
-                  selectedMenu === 'userVisibility'
-                    ? 'bg-[#5bbcaa] bg-opacity-10 text-[#5bbcaa]'
-                    : 'text-light-text-secondary dark:text-gray-300 hover:bg-light-secondary dark:hover:bg-gray-700/50'
-                ]"
-              >
-                User
-              </button>
-              <button
-                @click="settingsStore.selectedMenu = 'userGoal'"
-                :class="[
-                  'w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors',
-                  selectedMenu === 'userGoal'
-                    ? 'bg-[#5bbcaa] bg-opacity-10 text-[#5bbcaa]'
-                    : 'text-light-text-secondary dark:text-gray-300 hover:bg-light-secondary dark:hover:bg-gray-700/50'
-                ]"
-              >
-                Working Hours
-              </button>
-              <button
-                @click="settingsStore.selectedMenu = 'analytics'"
-                :class="[
-                  'w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors',
-                  selectedMenu === 'analytics'
-                    ? 'bg-[#5bbcaa] bg-opacity-10 text-[#5bbcaa]'
-                    : 'text-light-text-secondary dark:text-gray-300 hover:bg-light-secondary dark:hover:bg-gray-700/50'
-                ]"
-              >
-                Analytics
               </button>
               
             </div>
@@ -120,16 +75,6 @@
             <div v-else-if="selectedMenu === 'boards'">
               <BoardSettings />
             </div>
-            <div v-else-if="selectedMenu === 'userVisibility'">
-              <UserVisibilitySettings />
-            </div>
-            <div v-else-if="selectedMenu === 'userGoal'">
-              <UserGoalsSettings />
-            </div>
-            <div v-else-if="selectedMenu === 'analytics'">
-              <AnalyticsSettings />
-            </div>
-            <TableSettings v-else-if="settingsStore.selectedMenu === 'table'" />
           </div>
         </div>    
       </div>
@@ -142,10 +87,6 @@ import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { useSettingsStore } from '~/stores/settings'
 import GeneralSettings from './settings/GeneralSettings.vue'
 import BoardSettings from './settings/BoardSettings.vue'
-import UserVisibilitySettings from './settings/UserVisibilitySettings.vue'
-import UserGoalsSettings from './settings/UserGoalsSettings.vue'
-import AnalyticsSettings from './settings/AnalyticsSettings.vue'
-import TableSettings from '~/components/settings/TableSettings.vue'
 
 const props = defineProps({
   isOpen: {
@@ -158,7 +99,6 @@ const emit = defineEmits(['close'])
 
 const settingsStore = useSettingsStore()
 const selectedMenu = computed(() => settingsStore.selectedMenu)
-const isTableSettings = computed(() => selectedMenu.value === 'table')
 
 const close = () => {
   // Reset selected menu to default

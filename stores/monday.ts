@@ -32,6 +32,16 @@ interface ColumnValue {
   }
 }
 
+interface Asset {
+  id: string;
+  name: string;
+  url: string;
+  public_url: string;
+  url_thumbnail?: string;
+  file_extension: string;
+  file_size: number;
+}
+
 interface SubItem {
   id: string;
   name: string;
@@ -42,6 +52,7 @@ interface Item {
   id: string;
   name: string;
   column_values: ColumnValue[];
+  assets?: Asset[];
   subitems: SubItem[];
 }
 
@@ -56,6 +67,7 @@ interface Task {
   status: string
   boardId: string
   columnValues: ColumnValue[]
+  assets?: Asset[]
   subitems: SubItem[]
   // Add other relevant task properties based on your Monday.com schema
 }
@@ -114,6 +126,8 @@ export const useMondayStore = defineStore('monday', {
     async fetchBoardData() {
       const settingsStore = useSettingsStore()
       
+      console.log('🔍 Fetching data for board IDs:', settingsStore.boardIds)
+      
       if (settingsStore.boardIds.length === 0) {
         this.error = 'No boards configured. Please add board IDs in settings.'
         return
@@ -140,56 +154,47 @@ export const useMondayStore = defineStore('monday', {
                   items {
                     id
                     name
-                    column_values(ids: [
-                      "zeiterfassung5__1",
-                      "zeiterfassung__1",
-                      "priority",
-                      "name",
-                      "status",
-                      "person",
-                      "zahlen",
-                      "zeitleiste",
-                      "datum1",
-                      "datum8",
-                      "project8__1",
-                      "color_mktaqj05",
-                      "color_mkxp4zcz",
-                      "color_mkx09tgx"
-                    ]) {
+                    column_values {
                       id
                       text
                       value
-                      ... on TimeTrackingValue {
-                        history {
-                          status
-                          ended_at
-                          ended_user_id
-                          started_at
-                          started_user_id
-                        }
-                        duration
-                      }
+                      type
                       ... on StatusValue {
-                        label_style{border, color}
+                        label_style {
+                          border
+                          color
+                        }
                       }
+                      ... on FileValue {
+                        files {
+                          ... on FileAssetValue {
+                            name
+                            asset_id
+                          }
+                          ... on FileLinkValue {
+                            name
+                            url
+                          }
+                        }
+                      }
+                    }
+                    assets {
+                      id
+                      name
+                      url
+                      public_url
+                      url_thumbnail
+                      file_extension
+                      file_size
                     }
                     subitems {
                       id
                       name
-                      column_values(ids: ["zeiterfassung__1", "status"]) {
+                      column_values {
                         id
                         text
                         value
-                        ... on TimeTrackingValue {
-                          history {
-                            status
-                            ended_at
-                            ended_user_id
-                            started_at
-                            started_user_id
-                          }
-                          duration
-                        }
+                        type
                       }
                     }
                   }
@@ -260,25 +265,10 @@ export const useMondayStore = defineStore('monday', {
             columns: [],
             groups: [],
             tasks: allItems.map((item: Item) => {
-              const statusValue = item.column_values.find(cv => cv.id === "status")
-              const timeTrackingColumns = item.column_values.filter(cv => 
-                ['zeiterfassung5__1', 'zeiterfassung__1'].includes(cv.id)
-              ).map(cv => {
-                if (cv.value) {
-                  try {
-                    const parsed = JSON.parse(cv.value)
-                    if (parsed.history) {
-                      cv.history = parsed.history
-                    }
-                    if (parsed.duration) {
-                      cv.duration = parsed.duration
-                    }
-                  } catch (e) {
-                    console.error('Error parsing time tracking value:', e)
-                  }
-                }
-                return cv
-              })
+              // Find status column (could be status, color_mkvxkwcm, or other status columns)
+              const statusValue = item.column_values.find(cv => 
+                cv.type === 'status' || cv.id === 'status' || cv.id === 'color_mkvxkwcm'
+              )
 
               // Find which board this item came from
               const boardId = Array.from(boardItems.entries()).find(
@@ -289,13 +279,9 @@ export const useMondayStore = defineStore('monday', {
                 id: item.id,
                 name: item.name,
                 status: statusValue?.text || 'Not Started',
-                boardId, // Add the original board ID
-                columnValues: [
-                  ...item.column_values.filter(cv => 
-                    !['zeiterfassung5__1', 'zeiterfassung__1'].includes(cv.id)
-                  ),
-                  ...timeTrackingColumns
-                ],
+                boardId,
+                columnValues: item.column_values,
+                assets: item.assets,
                 subitems: item.subitems,
               }
             })

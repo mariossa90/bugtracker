@@ -17,6 +17,7 @@ module.exports = {
         gray: {
           900: '#121212',
           800: '#1E1E1E',
+          750: '#242424',  // Mid-tone between 800 and 700
           700: '#2A2A2A',
           600: '#3A3A3A',  // Added a new, slightly lighter gray for hover effects
           500: '#4A4A4A'  // Even lighter gray for additional contrast

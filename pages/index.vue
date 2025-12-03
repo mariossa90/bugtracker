@@ -18,21 +18,9 @@
             >
               <div class="flex flex-col items-center gap-0.5">
                 <span class="font-medium">
-                  {{ isMondayLoading ? 'Updating Monday...' : 'Update Monday Data' }}
+                  {{ isMondayLoading ? 'Updating Bugs...' : 'Update Bugs Data' }}
                 </span>
                 <AutoUpdateCountdown ref="countdownRef" class="text-white/90" />
-              </div>
-            </Button>
-            <Button      
-              class="bg-[#4f46e5] hover:bg-[#4338ca] text-white px-4 py-2 rounded-lg transition-colors w-44 inline-block disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#4f46e5]"
-              :disabled="isCalendarLoading"
-              @click="fetchCalendarData"
-            >
-              <div class="flex flex-col items-center gap-0.5">
-                <span class="font-medium">
-                  {{ isCalendarLoading ? 'Updating Calendar...' : 'Update Calendar' }}
-                </span>
-                <span class="text-xs opacity-75">Last: {{ lastCalendarUpdate }}</span>
               </div>
             </Button>
             <button
@@ -54,140 +42,7 @@
 
         <!-- Main content -->
         <div v-if="hasItems" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm relative overflow-hidden">
-          <div class="flex">
-            <!-- Left sidebar with navigation buttons -->
-            <div 
-              class="flex-shrink-0 flex flex-col border-r border-gray-200 dark:border-gray-700 transition-all duration-300"
-              :class="[
-                isSidebarExpanded ? 'w-48' : 'w-14'
-              ]"
-            >
-              <!-- Navigation Buttons -->
-              <div class="flex flex-col p-2">
-                <!-- Expand/Collapse Button -->
-                <button 
-                  @click="isSidebarExpanded = !isSidebarExpanded"
-                  class="flex items-center justify-center w-10 h-10 transition-colors hover:bg-gray-100 dark:hover:bg-gray-700 mb-2 rounded-md"
-                  :title="isSidebarExpanded ? 'Collapse Menu' : 'Expand Menu'"
-                >
-                  <i class="fas fa-chevron-left w-4 h-4 transition-transform duration-300"
-                     :class="{ 'rotate-180': !isSidebarExpanded }"></i>
-                </button>
-
-                <!-- Divider -->
-                <div class="h-[1px] bg-gray-200 dark:bg-gray-700 mb-2"></div>
-
-                <button 
-                  @click="activeBoard = 'time-tracking'" 
-                  class="flex items-center gap-3 px-3 py-2 transition-colors relative rounded-md" 
-                  :class="[
-                    activeBoard === 'time-tracking' 
-                      ? 'text-[#5bbcaa] bg-[#5bbcaa]/5 before:absolute before:left-0 before:top-1 before:bottom-1 before:w-0.5 before:bg-[#5bbcaa] before:rounded-full'
-                      : 'hover:bg-gray-100 dark:hover:bg-gray-700'
-                  ]"
-                  :title="!isSidebarExpanded ? 'Time Tracking' : ''"
-                >
-                  <i class="w-4 h-4 flex-shrink-0 flex items-center justify-center" :class="[
-                    activeBoard === 'time-tracking' ? 'fa-solid fa-clock' : 'fa-regular fa-clock'
-                  ]"></i>
-                  <span 
-                    class="whitespace-nowrap transition-opacity duration-300"
-                    :class="{ 'opacity-0 w-0': !isSidebarExpanded, 'opacity-100': isSidebarExpanded }"
-                  >
-                    Time Tracking
-                  </span>
-                </button>
-                <button 
-                  @click="activeBoard = 'analytics'" 
-                  class="flex items-center gap-3 px-3 py-2 transition-colors relative rounded-md" 
-                  :class="[
-                    activeBoard === 'analytics' 
-                      ? 'text-[#5bbcaa] bg-[#5bbcaa]/5 before:absolute before:left-0 before:top-1 before:bottom-1 before:w-0.5 before:bg-[#5bbcaa] before:rounded-full'
-                      : 'hover:bg-gray-100 dark:hover:bg-gray-700'
-                  ]"
-                  :title="!isSidebarExpanded ? 'Project Analytics' : ''"
-                >
-                  <i class="w-4 h-4 flex-shrink-0" :class="[
-                    activeBoard === 'analytics' ? 'fa-solid fa-chart-bar' : 'fa-regular fa-chart-bar'
-                  ]"></i>
-                  <span 
-                    class="whitespace-nowrap transition-opacity duration-300"
-                    :class="{ 'opacity-0 w-0': !isSidebarExpanded, 'opacity-100': isSidebarExpanded }"
-                  >
-                    Project Analytics
-                  </span>
-                </button>
-                <button 
-                  @click="activeBoard = 'user-analytics'" 
-                  class="flex items-center gap-3 px-3 py-2 transition-colors relative rounded-md" 
-                  :class="[
-                    activeBoard === 'user-analytics' 
-                      ? 'text-[#5bbcaa] bg-[#5bbcaa]/5 before:absolute before:left-0 before:top-1 before:bottom-1 before:w-0.5 before:bg-[#5bbcaa] before:rounded-full'
-                      : 'hover:bg-gray-100 dark:hover:bg-gray-700'
-                  ]"
-                  :title="!isSidebarExpanded ? 'User Analytics' : ''"
-                >
-                  <i class="w-4 h-4 flex-shrink-0" :class="[
-                    activeBoard === 'user-analytics' ? 'fa-solid fa-user' : 'fa-regular fa-user'
-                  ]"></i>
-                  <span 
-                    class="whitespace-nowrap transition-opacity duration-300"
-                    :class="{ 'opacity-0 w-0': !isSidebarExpanded, 'opacity-100': isSidebarExpanded }"
-                  >
-                    User Analytics
-                  </span>
-                </button>
-                <button 
-                  @click="activeBoard = 'tickets'" 
-                  class="flex items-center gap-3 px-3 py-2 transition-colors relative rounded-md" 
-                  :class="[
-                    activeBoard === 'tickets' 
-                      ? 'text-[#5bbcaa] bg-[#5bbcaa]/5 before:absolute before:left-0 before:top-1 before:bottom-1 before:w-0.5 before:bg-[#5bbcaa] before:rounded-full'
-                      : 'hover:bg-gray-100 dark:hover:bg-gray-700'
-                  ]"
-                  :title="!isSidebarExpanded ? 'Tickets Dashboard' : ''"
-                >
-                  <i class="w-4 h-4 flex-shrink-0" :class="[
-                    activeBoard === 'tickets' ? 'fa-solid fa-clipboard-list' : 'fa-regular fa-clipboard'
-                  ]"></i>
-                  <span 
-                    class="whitespace-nowrap transition-opacity duration-300"
-                    :class="{ 'opacity-0 w-0': !isSidebarExpanded, 'opacity-100': isSidebarExpanded }"
-                  >
-                    Tickets Dashboard
-                  </span>
-                </button>
-              </div>
-            </div>
-
-            <!-- Main content area -->
-            <div class="flex-1 min-w-0 overflow-hidden max-h-[calc(100vh-120px)]">
-              <Transition
-                mode="out-in"
-                enter-active-class="transition-opacity duration-200 ease-out"
-                enter-from-class="opacity-0"
-                enter-to-class="opacity-100"
-                leave-active-class="transition-opacity duration-200 ease-in"
-                leave-from-class="opacity-100"
-                leave-to-class="opacity-0"
-              >
-                <KeepAlive>
-                  <div v-if="activeBoard === 'time-tracking'" class="h-full">
-                    <DailyTimeList :items="allItems" />
-                  </div>
-                  <div v-else-if="activeBoard === 'analytics'">
-                    <AnalyticsBoard />
-                  </div>
-                  <div v-else-if="activeBoard === 'user-analytics'">
-                    <UserAnalytics />
-                  </div>
-                  <div v-else-if="activeBoard === 'tickets'">
-                    <TicketsBoard />
-                  </div>
-                </KeepAlive>
-              </Transition>
-            </div>
-          </div>
+          <BugsQueueBoard :items="allItems" />
         </div>
 
         <!-- No boards configured message -->
@@ -197,7 +52,7 @@
               No boards configured
             </p>
             <p class="text-gray-600 dark:text-gray-400 mb-4">
-              Please configure your Monday.com boards to start tracking time.
+              Please configure your Monday.com board to start viewing bugs. Add board ID: 2154669988
             </p>
             <button 
               @click="openSettings('boards')" 
@@ -210,7 +65,7 @@
 
         <!-- No data message -->
         <div v-else-if="!isLoading" class="text-center py-12">
-          <p class="text-gray-600 dark:text-gray-400">No data available. Click "Update Board Data" to load time entries.</p>
+          <p class="text-gray-600 dark:text-gray-400">No data available. Click "Update Bugs Data" to load bug entries.</p>
         </div>
 
         <!-- Settings Modal -->
@@ -244,23 +99,18 @@ import { useMondayStore } from '~/stores/monday'
 import { useSettingsStore } from '~/stores/settings'
 import { useMonday } from '~/composables/useMonday'
 import { useDailyTime } from '~/composables/useDailyTime'
-import DailyTimeList from '~/components/DailyTimeList.vue'
-import AnalyticsBoard from '~/components/AnalyticsBoard.vue'
-import UserAnalytics from '~/components/UserAnalytics.vue'
 import SettingsModal from '~/components/SettingsModal.vue'
 import AutoUpdateCountdown from '~/components/AutoUpdateCountdown.vue'
 import CurrentDateTime from '~/components/CurrentDateTime.vue'
 import ApiResponseTime from '~/components/ApiResponseTime.vue'
 import { useFullscreen } from '~/composables/useFullscreen'
-import { useCalendarStore } from '~/stores/calendar'
-import TicketsBoard from '~/components/TicketsBoard.vue'
+import BugsQueueBoard from '~/components/BugsQueueBoard.vue'
 
 const mondayStore = useMondayStore()
 const settingsStore = useSettingsStore()
 const { user, boards, isLoading: isLoadingMonday, error: errorMonday, fetchBoardData: fetchBoardDataFromMonday } = useMonday()
 const { processDailyTime } = useDailyTime()
 const { isFullscreen, toggleFullscreen } = useFullscreen()
-const calendarStore = useCalendarStore()
 
 const hasItems = computed(() => {
   return mondayStore.boards.some(board => board.tasks.length > 0)
@@ -289,18 +139,8 @@ const countdownRef = ref()
 
 const isLoading = ref(false)
 const isMondayLoading = ref(false)
-const isCalendarLoading = ref(false)
 const error = ref<string | null>(null)
 const lastResponseTime = ref<number | null>(null)
-
-const activeBoard = ref('time-tracking')
-
-const lastCalendarUpdate = computed(() => {
-  if (calendarStore.lastFetch) {
-    return new Date(calendarStore.lastFetch).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-  }
-  return 'Never'
-})
 
 const fetchMondayData = async () => {
   if (!settingsStore.canUpdateBoard) {
@@ -336,20 +176,6 @@ const fetchMondayData = async () => {
   }
 }
 
-const fetchCalendarData = async () => {
-  isCalendarLoading.value = true
-  error.value = null
-  
-  try {
-    // Force calendar update by passing true to bypass smart caching
-    await calendarStore.fetchCalendarData(true)
-  } catch (e) {
-    error.value = e instanceof Error ? e.message : 'An error occurred while fetching calendar data'
-  } finally {
-    isCalendarLoading.value = false
-  }
-}
-
 // Keep the original combined function for backward compatibility and auto-update
 const fetchBoardData = async () => {
   if (!settingsStore.canUpdateBoard) {
@@ -363,7 +189,6 @@ const fetchBoardData = async () => {
 
   isLoading.value = true
   isMondayLoading.value = true
-  isCalendarLoading.value = false
   error.value = null
   const startTime = performance.now()
   
@@ -372,25 +197,20 @@ const fetchBoardData = async () => {
     const endTime = performance.now()
     lastResponseTime.value = (endTime - startTime) / 1000 // Convert to seconds
     
-    // Set calendar loading state
-    isCalendarLoading.value = true
-    await calendarStore.fetchCalendarData()
+    // Process the data after fetching
+    await processDailyTime()
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'An error occurred while fetching data'
     lastResponseTime.value = null
   } finally {
     isLoading.value = false
     isMondayLoading.value = false
-    isCalendarLoading.value = false
   }
-  await processDailyTime()
 }
 
 const processData = async () => {
   await processDailyTime()
 }
-
-const isSidebarExpanded = ref(false)
 </script>
 
 <style scoped>
