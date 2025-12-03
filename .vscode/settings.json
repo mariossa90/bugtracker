@@ -1,0 +1,260 @@
+{
+
+  
+  // Team Commands (copied from your user settings)
+ 
+  "commands.workspaceCommands": {
+    "Terminal: New": {
+      "command": "workbench.action.terminal.new",
+      "statusBar": {
+        "text": "$(terminal) New Terminal",
+        "tooltip": "Create a New Terminal",
+        "alignment": "left",
+        "priority": 120,
+        "color": "#65c469",
+        "backgroundColor": "warning"
+
+      }
+    },
+    "Terminal: Kill Active": {
+      "command": "workbench.action.terminal.kill",
+      "statusBar": {
+        "text": "$(x) Kill Terminal",
+        "tooltip": "Kill Active Terminal",
+        "alignment": "left",
+        "priority": 110,
+        "color": "#ff4757",
+        "backgroundColor": "error"
+      }
+    },
+    "Toggle multiple settings": {
+      "sequence": [
+        {
+          "command": "workbench.action.terminal.new",
+          "args": {
+            "name": "Browser Tools"
+          }
+        },
+        {
+          "command": "workbench.action.terminal.renameWithArg",
+          "args": {
+            "name": "Browser Tools"
+          }
+        },
+        {
+          "command": "workbench.action.terminal.sendSequence",
+          "args": {
+            "text": "npx @agentdeskai/browser-tools-server@1.2.0\r"
+          }
+        }
+      ],
+      "statusBar": {
+        "text": "$(browser) Browser Tools",
+        "tooltip": "Start Browser Tools Server",
+        "alignment": "left",
+        "priority": 106,
+        "color": "#c986e4"
+      }
+    },
+    "Terminal: Go to Frontend": {
+      "command": "workbench.action.terminal.sendSequence",
+      "args": {
+        "text": "cd frontend\r"
+      },
+      "statusBar": {
+        "text": "$(folder) Frontend",
+        "tooltip": "Navigate to Frontend Directory",
+        "alignment": "left",
+        "priority": 105,
+        "color": "#FFD700"
+      }
+    },
+    "Terminal: Run Dev": {
+      "sequence": [
+        {
+          "command": "workbench.action.terminal.new",
+          "args": {
+            "name": "Dev Server"
+          }
+        },
+        {
+          "command": "workbench.action.terminal.renameWithArg",
+          "args": {
+            "name": "Dev Server"
+          }
+        },
+        {
+          "command": "workbench.action.terminal.sendSequence",
+          "args": {
+            "text": "cd frontend\r"
+          }
+        },
+        {
+          "command": "workbench.action.terminal.sendSequence",
+          "args": {
+            "text": "npm run dev\r"
+          }
+        }
+      ],
+      "statusBar": {
+        "text": "$(play) Dev",
+        "tooltip": "Run Development Server",
+        "alignment": "left",
+        "priority": 100,
+        "color": "#FF6B35"
+      }
+    },
+    "Terminal: Type Check": {
+      "sequence": [
+        {
+          "command": "workbench.action.terminal.new",
+          "args": {
+            "name": "TypeCheck"
+          }
+        },
+        {
+          "command": "workbench.action.terminal.renameWithArg",
+          "args": {
+            "name": "TypeCheck"
+          }
+        },
+        {
+          "command": "workbench.action.terminal.sendSequence",
+          "args": {
+            "text": "cd frontend\r"
+          }
+        },
+        {
+          "command": "workbench.action.terminal.sendSequence",
+          "args": {
+            "text": "npm run type-check\r"
+          }
+        }
+      ],
+      "statusBar": {
+        "text": "$(check) TypeCheck",
+        "tooltip": "Run TypeScript Type Check",
+        "alignment": "left",
+        "priority": 90,
+        "color": "#1eeee0"
+      }
+    },
+    "Terminal: Update Translation": {
+      "sequence": [
+        {
+          "command": "workbench.action.terminal.new",
+          "args": {
+            "name": "Update Translations"
+          }
+        },
+        {
+          "command": "workbench.action.terminal.renameWithArg",
+          "args": {
+            "name": "Update Translations"
+          }
+        },
+        {
+          "command": "workbench.action.terminal.sendSequence",
+          "args": {
+            "text": "cd frontend\r"
+          }
+        },
+        {
+          "command": "workbench.action.terminal.sendSequence",
+          "args": {
+            "text": "npm run update-translations\r"
+          }
+        }
+      ],
+      "statusBar": {
+        "text": "$(sync) Update Translations",
+        "tooltip": "Update Translations",
+        "alignment": "left",
+        "priority": 80,
+        "color": "#c1ee58"
+      }
+    },
+    "Terminal: Match Translations IDs": {
+      "sequence": [
+        {
+          "command": "workbench.action.terminal.new",
+          "args": {
+            "name": "Match IDs"
+          }
+        },
+        {
+          "command": "workbench.action.terminal.renameWithArg",
+          "args": {
+            "name": "Match IDs"
+          }
+        },
+        {
+          "command": "workbench.action.terminal.sendSequence",
+          "args": {
+            "text": "cd frontend\r"
+          }
+        },
+        {
+          "command": "workbench.action.terminal.sendSequence",
+          "args": {
+            "text": "npm run match-translation-ids\r"
+          }
+        }
+      ],
+      "statusBar": {
+        "text": "$(link) Match IDs",
+        "tooltip": "Match Translation IDs",
+        "alignment": "left",
+        "priority": 70,
+        "color": "#15f38b"
+      }
+    },
+    "Open Translation DB": {
+    "command": "commands.openExternal",
+    "args": "https://www.woojin.help/wjTDB/Robot/index.php",
+    "statusBar": {
+      "text": "$(globe) Open Translation DB",
+      "tooltip": "Open Translation DB",
+      "alignment": "left",
+      "priority": 60,
+      "color": "#c986e4"
+    }
+},
+    "Terminal: CSS Refactor Interactive": {
+      "sequence": [
+        {
+          "command": "workbench.action.terminal.new",
+          "args": {
+            "name": "CSS Refactor"
+          }
+        },
+        {
+          "command": "workbench.action.terminal.renameWithArg",
+          "args": {
+            "name": "CSS Refactor"
+          }
+        },
+        {
+          "command": "workbench.action.terminal.sendSequence",
+          "args": {
+            "text": "cd frontend\r"
+          }
+        },
+        {
+          "command": "workbench.action.terminal.sendSequence",
+          "args": {
+            "text": "npm run css-refactor-interactive\r"
+          }
+        }
+      ],
+      "statusBar": {
+        "text": "$(paintcan) CSS Refactor",
+        "tooltip": "Run Interactive CSS Refactor Tool",
+        "alignment": "left",
+        "priority": 50,
+        "color": "#ff79c6"
+      }
+    }
+
+  }
+}

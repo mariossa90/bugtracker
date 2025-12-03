@@ -4,7 +4,14 @@
       <div v-if="!selectedUser" class="flex items-center justify-center h-32 text-gray-500 dark:text-gray-400">
         Please select a user to view their time tracking data
       </div>
-      <div v-else-if="selectedUser" class="overflow-x-auto -mx-6 custom-scrollbar">
+      <div v-else-if="selectedUser" 
+           ref="scrollContainerRef"
+           class="overflow-x-auto -mx-6 custom-scrollbar"
+           @mousedown="startDragging"
+           @mouseleave="stopDragging"
+           @mouseup="stopDragging"
+           @mousemove="onDrag"
+      >
         <div class="inline-block min-w-full align-middle">
           <div class="overflow-hidden relative">
             <table class="min-w-full rounded-lg border dark:border-gray-700 overflow-hidden">
@@ -213,7 +220,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useDailyTime } from '~/composables/useDailyTime'
 import { useWorkGoals } from '~/composables/useWorkGoals'
 import { useDailyTimeStore } from '~/stores/dailyTime'
@@ -244,6 +251,43 @@ const props = defineProps<{
 const expandedRow = ref<string | null>(null)
 
 const isLoading = computed(() => mondayStore.loading);
+
+// Drag to scroll functionality
+const scrollContainerRef = ref<HTMLElement | null>(null)
+const isDragging = ref(false)
+const startX = ref(0)
+const scrollLeft = ref(0)
+
+const startDragging = (e: MouseEvent) => {
+  if (!scrollContainerRef.value) return
+  isDragging.value = true
+  startX.value = e.pageX - scrollContainerRef.value.offsetLeft
+  scrollLeft.value = scrollContainerRef.value.scrollLeft
+  scrollContainerRef.value.style.cursor = 'grabbing'
+  scrollContainerRef.value.style.userSelect = 'none'
+}
+
+const stopDragging = () => {
+  isDragging.value = false
+  if (scrollContainerRef.value) {
+    scrollContainerRef.value.style.cursor = 'grab'
+    scrollContainerRef.value.style.userSelect = ''
+  }
+}
+
+const onDrag = (e: MouseEvent) => {
+  if (!isDragging.value || !scrollContainerRef.value) return
+  e.preventDefault()
+  const x = e.pageX - scrollContainerRef.value.offsetLeft
+  const walk = (x - startX.value) * 2 // Scroll speed multiplier
+  scrollContainerRef.value.scrollLeft = scrollLeft.value - walk
+}
+
+onMounted(() => {
+  if (scrollContainerRef.value) {
+    scrollContainerRef.value.style.cursor = 'grab'
+  }
+})
 
 const selectedUser = computed(() => props.selectedUser)
 

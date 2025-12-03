@@ -1,43 +1,313 @@
 <template>
-  <div id="user-analytics-container" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 overflow-auto min-w-[1024px] max-h-[calc(100vh-104px)]">
-    <!-- Period Selection -->
-    <div id="period-selection-container" class="flex flex-col items-end gap-1">
-      <div id="controls-row" class="flex items-center justify-between w-full gap-4">
-        <div id="user-selection" class="flex flex-wrap gap-2 lg:max-w-[60%] xl:max-w-[65%] 2xl:max-w-[70%] max-h-[5.5rem] overflow-y-auto">
-          <div class="flex flex-wrap gap-1 w-full">
-            <button
-              v-for="user in availableUsers"
-              :key="user"
-              :id="`user-button-${user.replace(/\s+/g, '-').toLowerCase()}`"
-              @click="selectedUser = user"
-              :class="[
-                'px-4 py-2 text-sm font-medium rounded-lg transition-colors flex items-center gap-2',
-                selectedUser === user
-                  ? 'bg-[#5bbcaa] text-white hover:bg-[#4ca899]'
-                  : 'bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600'
-              ]"
-            >
-              <img 
-                v-if="settingsStore.showUserImages && getUserImage(user)"
-                :src="getUserImage(user)!" 
-                :alt="user"
-                class="w-6 h-6 rounded-full flex-shrink-0"
+  <div id="user-analytics-container" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 overflow-hidden min-w-[1024px] h-[calc(100vh-104px)] w-full max-w-full">
+    <!-- 2 Column Layout -->
+    <div class="flex h-full w-full max-w-full overflow-hidden">
+      <!-- Left Column (Takes remaining space) -->
+      <div id="left-column" class="flex-1 flex flex-col pr-4 border-r border-gray-200 dark:border-gray-600 min-w-0 overflow-hidden h-full max-h-full">
+        <!-- Charts Container -->
+        <div id="charts-container" class="flex flex-col h-full min-h-0">
+          <div id="charts-row" class="flex gap-6 min-w-0 flex-1 min-h-0 overflow-hidden">
+            <!-- Task Details Column (Now First) -->
+            <div id="task-details-column" class="flex-1 flex flex-col min-w-0 min-h-0">
+              <div id="task-details-header" class="flex items-center justify-between mb-4 min-h-[2.5rem] flex-shrink-0">
+                <h3 id="task-details-title" class="text-lg font-medium text-gray-800 dark:text-gray-200">
+                  Task Details (by {{ getGroupingLabel() }})
+                </h3>
+              </div>
+              <div id="task-details-container" class="bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm flex-1 overflow-y-auto min-h-0">
+                <div v-if="selectedUser" class="space-y-2">
+                  <!-- Grouping Row (First Row Inside Container) -->
+                  <div id="grouping-row" class="flex items-center justify-start gap-2 mb-4">
+                    <div id="grouping-buttons" class="flex rounded-lg shadow-sm w-full">
+                      <button 
+                        v-for="grouping in groupings" 
+                        :key="grouping.value"
+                        :id="`grouping-${grouping.value}`"
+                        @click="selectedGrouping = grouping.value"
+                        :class="[
+                          'px-3 py-1.5 text-sm font-medium flex items-center justify-center gap-2 flex-1',
+                          selectedGrouping === grouping.value
+                            ? 'bg-[#5bbcaa] text-white hover:bg-[#4ca899] border-[#5bbcaa]'
+                            : 'bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600',
+                          'first:rounded-l-lg last:rounded-r-lg',
+                          'border-[0.5px] border-r first:border-l border-gray-200 dark:border-gray-600'
+                        ]"
+                      >
+                        <i :class="['fas', grouping.icon]"></i>
+                        {{ grouping.label }}
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Summary Section -->
+                  <div id="summary-section" class="mb-6 grid grid-cols-2 gap-4">
+                    <div id="total-time-card" class="bg-[#5bbcaa]/10 dark:bg-[#5bbcaa]/20 rounded-lg p-4">
+                      <div class="text-sm text-gray-600 dark:text-gray-400">Total Time</div>
+                      <div class="text-xl font-semibold text-[#5bbcaa]">
+                        {{ formatTime(getTotalTimeTracked()) }}
+                      </div>
+                    </div>
+                    <div id="total-tasks-card" class="bg-[#5bbcaa]/10 dark:bg-[#5bbcaa]/20 rounded-lg p-4">
+                      <div class="text-sm text-gray-600 dark:text-gray-400">Total Tasks</div>
+                      <div class="text-xl font-semibold text-[#5bbcaa]">
+                        {{ getTotalTasks() }}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div 
+                    v-for="[group, tasks] in projectTasks" 
+                    :key="group" 
+                    :id="`group-${group.replace(/\s+/g, '-').toLowerCase()}`"
+                    class="border border-gray-200 dark:border-gray-600 rounded-lg"
+                  >
+                    <!-- Group Header -->
+                    <button 
+                      :id="`group-header-${group.replace(/\s+/g, '-').toLowerCase()}`"
+                      @click="toggleProject(group)"
+                      class="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg transition-colors"
+                      :style="{
+                        borderLeft: `4px solid ${getProjectStatusColors([group])[0]}`,
+                        paddingLeft: '1rem'
+                      }"
+                    >
+                      <div class="flex items-center gap-2">
+                        <i 
+                          class="fas fa-chevron-right transition-transform"
+                          :class="{ 'rotate-90': expandedProjects.includes(group) }"
+                          :style="{ color: getProjectStatusColors([group])[0] }"
+                        ></i>
+                        <span class="font-medium" :style="{ color: getProjectStatusColors([group])[0] }">{{ group }}</span>
+                      </div>
+                      <div class="text-sm text-gray-600 dark:text-gray-400 space-x-4">
+                        <span>{{ tasks.length }} tasks</span>
+                        <span>{{ formatTime(getProjectTotalTime(tasks)) }} ({{ getProjectTimePercentage(group, getProjectTotalTime(tasks)) }}%)</span>
+                      </div>
+                    </button>
+                    
+                    <!-- Task List -->
+                    <div 
+                      :id="`task-list-${group.replace(/\s+/g, '-').toLowerCase()}`"
+                      v-show="expandedProjects.includes(group)" 
+                      class="border-t border-gray-200 dark:border-gray-600"
+                    >
+                      <div 
+                        v-for="task in [...tasks].sort((a, b) => b.timeTracked - a.timeTracked)" 
+                        :key="task.id" 
+                        :id="`task-${task.id}`"
+                        class="px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-600/50 flex items-center justify-between"
+                      >
+                        <div class="flex items-center justify-between flex-1 min-w-0">
+                          <div class="flex items-center gap-2">
+                            <i 
+                              class="fas fa-circle text-xs"
+                              :style="{ color: task.status.color }"
+                              :title="task.status.text"
+                            ></i>
+                            <div class="w-6 h-6 rounded-full flex-shrink-0" :title="`Assigned to ${task.assignedUser.name}`">
+                              <img 
+                                v-if="task.assignedUser.image"
+                                :src="task.assignedUser.image" 
+                                :alt="task.assignedUser.name"
+                                class="w-full h-full rounded-full"
+                              />
+                              <i 
+                                v-else
+                                class="fas fa-user w-full h-full rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-gray-500 dark:text-gray-400 text-xs"
+                              ></i>
+                            </div>
+                            <a 
+                              class="truncate min-w-0 lg:max-w-[150px] xl:max-w-[180px] 2xl:max-w-[220px] hover:text-[#5bbcaa] cursor-pointer transition-colors" 
+                              :title="task.name"
+                              @click.stop="openMondayTask(task.boardId, task.id)"
+                            >
+                              {{ task.name }}
+                            </a>
+                            <button 
+                              class="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                              @click.stop="copyToClipboard(task.name)"
+                              title="Copy task name"
+                            >
+                              <i class="fas fa-copy text-xs"></i>
+                            </button>
+                          </div>
+                          <div class="text-sm text-gray-600 dark:text-gray-400 flex-shrink-0 ml-4">
+                            {{ formatTime(task.timeTracked) }}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div v-else class="h-full flex items-center justify-center text-gray-500 dark:text-gray-400">
+                  Please select a user to view their tasks
+                </div>
+              </div>
+            </div>
+
+            <!-- Bar Charts Column (Now Second) -->
+            <div id="bar-charts-column" class="flex-1 flex flex-col min-w-0 min-h-0">
+              <div id="bar-chart-header" class="flex items-center justify-between mb-4 min-h-[2.5rem] flex-shrink-0">
+                <h3 id="bar-chart-title" class="text-lg font-medium text-gray-800 dark:text-gray-200">
+                  {{ showTimeChart ? 'Time Tracked' : `Assigned ${getGroupingLabel()}` }}
+                </h3>
+                <div id="bar-chart-toggle" class="flex rounded-lg shadow-sm">
+                  <button 
+                    id="time-chart-button"
+                    @click="showTimeChart = true"
+                    class="px-4 py-1.5 text-sm font-medium flex items-center gap-2 border border-r-0 first:rounded-l-lg"
+                    :class="[
+                      showTimeChart
+                        ? 'bg-[#5bbcaa] text-white hover:bg-[#4ca899] border-[#5bbcaa]'
+                        : 'bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 border-gray-200 dark:border-gray-600'
+                    ]"
+                  >
+                    <i class="fas fa-clock"></i>
+                    Time
+                  </button>
+                  <button 
+                    id="tasks-chart-button"
+                    @click="showTimeChart = false"
+                    class="px-4 py-1.5 text-sm font-medium flex items-center gap-2 border last:rounded-r-lg"
+                    :class="[
+                      !showTimeChart
+                        ? 'bg-[#5bbcaa] text-white hover:bg-[#4ca899] border-[#5bbcaa]'
+                        : 'bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 border-gray-200 dark:border-gray-600'
+                    ]"
+                  >
+                    <i :class="['fas', getCurrentGroupingIcon()]"></i>
+                    {{ getGroupingLabel() }}
+                  </button>
+                </div>
+              </div>
+          
+          <!-- Combined Chart Container -->
+          <div id="bar-chart-container" class="bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm flex-1 min-h-0 overflow-hidden">
+            <div v-if="selectedUser" class="h-full">
+              <Chart 
+                v-if="!showTimeChart"
+                type="bar" 
+                :data="tasksChartData" 
+                :options="tasksChartOptions" 
+                class="h-full" 
               />
-              <i 
-                v-else-if="settingsStore.showUserImages"
-                class="fas fa-user w-6 h-6 rounded-full flex-shrink-0 bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-gray-500 dark:text-gray-400 text-xs"
-              ></i>
-              {{ formatUserName(user) }}
-            </button>
+              <Chart 
+                v-if="showTimeChart"
+                type="bar" 
+                :data="timeChartData" 
+                :options="timeChartOptions" 
+                class="h-full" 
+              />
+            </div>
+            <div v-else class="h-full flex items-center justify-center text-gray-500 dark:text-gray-400">
+              Please select a user to view their {{ showTimeChart ? 'time tracking' : getGroupingLabel().toLowerCase() }}
+            </div>
+            </div>
+            </div>
+
+            <!-- Pie Charts Column (Now Third) -->
+            <div id="pie-charts-column" class="flex-1 flex flex-col min-w-0 min-h-0">
+              <div id="pie-chart-header" class="flex items-center justify-between mb-4 min-h-[2.5rem] flex-shrink-0">
+                <h3 id="pie-chart-title" class="text-lg font-medium text-gray-800 dark:text-gray-200 truncate">
+                  {{ showTimePieChart ? 'Time Distribution' : `${getGroupingLabel()} Distribution` }}
+                </h3>
+                <div id="pie-chart-toggle" class="flex rounded-lg shadow-sm">
+                  <button 
+                    id="time-pie-button"
+                    @click="showTimePieChart = true"
+                    class="px-4 py-1.5 text-sm font-medium flex items-center gap-2 border border-r-0 first:rounded-l-lg"
+                    :class="[
+                      showTimePieChart
+                        ? 'bg-[#5bbcaa] text-white hover:bg-[#4ca899] border-[#5bbcaa]'
+                        : 'bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 border-gray-200 dark:border-gray-600'
+                    ]"
+                  >
+                    <i class="fas fa-clock"></i>
+                    Time
+                  </button>
+                  <button 
+                    id="tasks-pie-button"
+                    @click="showTimePieChart = false"
+                    class="px-4 py-1.5 text-sm font-medium flex items-center gap-2 border last:rounded-r-lg"
+                    :class="[
+                      !showTimePieChart
+                        ? 'bg-[#5bbcaa] text-white hover:bg-[#4ca899] border-[#5bbcaa]'
+                        : 'bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 border-gray-200 dark:border-gray-600'
+                    ]"
+                  >
+                    <i :class="['fas', getCurrentGroupingIcon()]"></i>
+                    {{ getGroupingLabel() }}
+                  </button>
+                </div>
+              </div>
+          
+          <!-- Combined Pie Chart Container -->
+          <div id="pie-chart-container" class="bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm flex-1 min-h-0 overflow-hidden">
+            <div v-if="selectedUser" class="h-full">
+              <Chart 
+                v-if="!showTimePieChart"
+                type="pie" 
+                :data="tasksPieChartData" 
+                :options="pieChartOptions" 
+                class="h-full w-full" 
+              />
+              <Chart 
+                v-if="showTimePieChart"
+                type="pie" 
+                :data="timePieChartData" 
+                :options="timePieChartOptions" 
+                class="h-full w-full" 
+              />
+            </div>
+            <div v-else class="h-full flex items-center justify-center text-gray-500 dark:text-gray-400">
+              Please select a user to view their {{ showTimePieChart ? 'time' : getGroupingLabel().toLowerCase() }} distribution
+            </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- UserTimeList Container -->
+          <div 
+            id="user-time-list-container" 
+            class="w-full flex-shrink-0 overflow-x-auto min-w-0"
+          >
+            <UserTimeList 
+              :selected-user="selectedUser"
+              :selected-date="selectedDate"
+              :selected-period="selectedPeriod"
+            />
           </div>
         </div>
+      </div>
 
-        <div id="date-controls" class="flex items-center gap-4 flex-shrink-0">
-          <div id="date-navigation" class="flex items-center gap-2">
+      <!-- Right Column (Auto width based on content) -->
+      <div id="right-column" class="flex-shrink-0 flex flex-col gap-4 pl-4 overflow-auto">
+        <!-- Date Controls -->
+        <div id="date-controls" class="flex flex-col items-center gap-2">
+          <div id="period-buttons" class="flex rounded-lg shadow-sm w-full">
+            <button 
+              v-for="period in periods" 
+              :key="period.value"
+              :id="`period-${period.value}`"
+              @click="setPeriod(period.value)"
+              :class="[
+                'px-4 py-2 text-sm font-medium flex-1',
+                selectedPeriod === period.value
+                  ? 'bg-[#5bbcaa] text-white hover:bg-[#4ca899] border-[#5bbcaa]'
+                  : 'bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600',
+                'first:rounded-l-lg last:rounded-r-lg',
+                'border-[0.5px] border-r first:border-l border-gray-200 dark:border-gray-600'
+              ]"
+            >
+              {{ period.label }}
+            </button>
+          </div>
+
+          <div id="date-navigation" class="flex items-center gap-2 w-full">
             <button 
               id="prev-period"
               @click="navigatePeriod(-1)"
-              class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+              class="p-2 rounded-lg bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600"
               :class="{ 'invisible': selectedPeriod === 'total' }"
             >
               <svg class="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -58,7 +328,7 @@
             <button 
               id="next-period"
               @click="navigatePeriod(1)"
-              class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+              class="p-2 rounded-lg bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600"
               :class="{ 'invisible': selectedPeriod === 'total' }"
             >
               <svg class="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -67,274 +337,41 @@
             </button>
           </div>
 
-          <div id="period-buttons" class="flex rounded-lg shadow-sm">
-            <button 
-              v-for="period in periods" 
-              :key="period.value"
-              :id="`period-${period.value}`"
-              @click="setPeriod(period.value)"
-              :class="[
-                'px-4 py-2 text-sm font-medium',
-                selectedPeriod === period.value
-                  ? 'bg-[#5bbcaa] text-white hover:bg-[#4ca899] border-[#5bbcaa]'
-                  : 'bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600',
-                'first:rounded-l-lg last:rounded-r-lg',
-                'border-[0.5px] border-r first:border-l border-gray-200 dark:border-gray-600'
-              ]"
-            >
-              {{ period.label }}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Date Range Display -->
-      <div id="date-range-text" class="text-sm text-gray-600 dark:text-gray-400">
-        {{ dateRangeText }}
-      </div>
-    </div>
-
-    <!-- User Tasks Charts -->
-    <div id="charts-container" class="mt-6 h-auto">
-      <div class="grid grid-cols-12 gap-6">
-        <!-- Left Column (Bar Charts) -->
-        <div id="bar-charts-column" class="col-span-6 flex flex-col h-[54vh]">
-          <div id="bar-chart-header" class="flex items-center justify-between mb-4">
-            <h3 id="bar-chart-title" class="text-lg font-medium text-gray-800 dark:text-gray-200">
-              {{ showTimeChart ? 'Time Tracked' : 'Assigned Tasks' }}
-            </h3>
-            <div id="bar-chart-toggle" class="flex rounded-lg shadow-sm">
-              <button 
-                id="time-chart-button"
-                @click="showTimeChart = true"
-                class="px-4 py-1.5 text-sm font-medium flex items-center gap-2 border border-r-0 first:rounded-l-lg"
-                :class="[
-                  showTimeChart
-                    ? 'bg-[#5bbcaa] text-white hover:bg-[#4ca899] border-[#5bbcaa]'
-                    : 'bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 border-gray-200 dark:border-gray-600'
-                ]"
-              >
-                <i class="fas fa-clock"></i>
-                Time
-              </button>
-              <button 
-                id="tasks-chart-button"
-                @click="showTimeChart = false"
-                class="px-4 py-1.5 text-sm font-medium flex items-center gap-2 border last:rounded-r-lg"
-                :class="[
-                  !showTimeChart
-                    ? 'bg-[#5bbcaa] text-white hover:bg-[#4ca899] border-[#5bbcaa]'
-                    : 'bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 border-gray-200 dark:border-gray-600'
-                ]"
-              >
-                <i class="fas fa-tasks"></i>
-                Tasks
-              </button>
-            </div>
-          </div>
-          
-          <!-- Combined Chart Container -->
-          <div id="bar-chart-container" class="bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm h-[calc(54vh-4rem)]">
-            <div v-if="selectedUser" class="h-full">
-              <Chart 
-                v-if="!showTimeChart"
-                type="bar" 
-                :data="tasksChartData" 
-                :options="tasksChartOptions" 
-                class="h-full" 
-              />
-              <Chart 
-                v-if="showTimeChart"
-                type="bar" 
-                :data="timeChartData" 
-                :options="timeChartOptions" 
-                class="h-full" 
-              />
-            </div>
-            <div v-else class="h-full flex items-center justify-center text-gray-500 dark:text-gray-400">
-              Please select a user to view their {{ showTimeChart ? 'time tracking' : 'tasks' }}
-            </div>
+          <!-- Date Range Display -->
+          <div id="date-range-text" class="text-sm text-gray-600 dark:text-gray-400 text-center">
+            {{ dateRangeText }}
           </div>
         </div>
 
-        <!-- Middle Column (Pie Charts) -->
-        <div id="pie-charts-column" class="col-span-3 flex flex-col h-[54vh]">
-          <div id="pie-chart-header" class="flex items-center justify-between mb-4">
-            <h3 id="pie-chart-title" class="text-lg font-medium text-gray-800 dark:text-gray-200 truncate">
-              {{ showTimePieChart ? 'Time Distribution' : 'Tasks Distribution' }}
-            </h3>
-            <div id="pie-chart-toggle" class="flex rounded-lg shadow-sm">
-              <button 
-                id="time-pie-button"
-                @click="showTimePieChart = true"
-                class="px-4 py-1.5 text-sm font-medium flex items-center gap-2 border border-r-0 first:rounded-l-lg"
-                :class="[
-                  showTimePieChart
-                    ? 'bg-[#5bbcaa] text-white hover:bg-[#4ca899] border-[#5bbcaa]'
-                    : 'bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 border-gray-200 dark:border-gray-600'
-                ]"
-              >
-                <i class="fas fa-clock"></i>
-                Time
-              </button>
-              <button 
-                id="tasks-pie-button"
-                @click="showTimePieChart = false"
-                class="px-4 py-1.5 text-sm font-medium flex items-center gap-2 border last:rounded-r-lg"
-                :class="[
-                  !showTimePieChart
-                    ? 'bg-[#5bbcaa] text-white hover:bg-[#4ca899] border-[#5bbcaa]'
-                    : 'bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 border-gray-200 dark:border-gray-600'
-                ]"
-              >
-                <i class="fas fa-tasks"></i>
-                Tasks
-              </button>
-            </div>
-          </div>
-          
-          <!-- Combined Pie Chart Container -->
-          <div id="pie-chart-container" class="bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm h-[calc(54vh-4rem)]">
-            <div v-if="selectedUser" class="h-full">
-              <Chart 
-                v-if="!showTimePieChart"
-                type="pie" 
-                :data="tasksPieChartData" 
-                :options="pieChartOptions" 
-                class="h-full w-full" 
-              />
-              <Chart 
-                v-if="showTimePieChart"
-                type="pie" 
-                :data="timePieChartData" 
-                :options="timePieChartOptions" 
-                class="h-full w-full" 
-              />
-            </div>
-            <div v-else class="h-full flex items-center justify-center text-gray-500 dark:text-gray-400">
-              Please select a user to view their {{ showTimePieChart ? 'time' : 'tasks' }} distribution
-            </div>
-          </div>
-        </div>
+        <!-- Separator -->
+        <div class="border-t border-gray-200 dark:border-gray-600"></div>
 
-        <!-- Task Details Column -->
-        <div id="task-details-column" class="col-span-3 flex flex-col h-[54vh]">
-          <h3 id="task-details-title" class="text-lg font-medium text-gray-800 dark:text-gray-200 mb-5">Task Details</h3>
-          <div id="task-details-container" class="bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-700 p-6 shadow-sm h-[calc(54vh-4rem)] overflow-auto">
-            <div v-if="selectedUser" class="space-y-2 h-full overflow-y-auto">
-              <!-- Summary Section -->
-              <div id="summary-section" class="mb-6 grid grid-cols-2 gap-4">
-                <div id="total-time-card" class="bg-[#5bbcaa]/10 dark:bg-[#5bbcaa]/20 rounded-lg p-4">
-                  <div class="text-sm text-gray-600 dark:text-gray-400">Total Time</div>
-                  <div class="text-xl font-semibold text-[#5bbcaa]">
-                    {{ formatTime(getTotalTimeTracked()) }}
-                  </div>
-                </div>
-                <div id="total-tasks-card" class="bg-[#5bbcaa]/10 dark:bg-[#5bbcaa]/20 rounded-lg p-4">
-                  <div class="text-sm text-gray-600 dark:text-gray-400">Total Tasks</div>
-                  <div class="text-xl font-semibold text-[#5bbcaa]">
-                    {{ getTotalTasks() }}
-                  </div>
-                </div>
-              </div>
-              
-              <div 
-                v-for="[project, tasks] in projectTasks" 
-                :key="project" 
-                :id="`project-${project.replace(/\s+/g, '-').toLowerCase()}`"
-                class="border border-gray-200 dark:border-gray-600 rounded-lg"
-              >
-                <!-- Project Header -->
-                <button 
-                  :id="`project-header-${project.replace(/\s+/g, '-').toLowerCase()}`"
-                  @click="toggleProject(project)"
-                  class="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg transition-colors"
-                  :style="{
-                    borderLeft: `4px solid ${getProjectStatusColors([project])[0]}`,
-                    paddingLeft: '1rem'
-                  }"
-                >
-                  <div class="flex items-center gap-2">
-                    <i 
-                      class="fas fa-chevron-right transition-transform"
-                      :class="{ 'rotate-90': expandedProjects.includes(project) }"
-                      :style="{ color: getProjectStatusColors([project])[0] }"
-                    ></i>
-                    <span class="font-medium" :style="{ color: getProjectStatusColors([project])[0] }">{{ project }}</span>
-                  </div>
-                  <div class="text-sm text-gray-600 dark:text-gray-400 space-x-4">
-                    <span>{{ tasks.length }} tasks</span>
-                    <span>{{ formatTime(getProjectTotalTime(tasks)) }} ({{ getProjectTimePercentage(project, getProjectTotalTime(tasks)) }}%)</span>
-                  </div>
-                </button>
-                
-                <!-- Task List -->
-                <div 
-                  :id="`task-list-${project.replace(/\s+/g, '-').toLowerCase()}`"
-                  v-show="expandedProjects.includes(project)" 
-                  class="border-t border-gray-200 dark:border-gray-600"
-                >
-                  <div 
-                    v-for="task in [...tasks].sort((a, b) => b.timeTracked - a.timeTracked)" 
-                    :key="task.id" 
-                    :id="`task-${task.id}`"
-                    class="px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-600/50 flex items-center justify-between"
-                  >
-                    <div class="flex items-center justify-between flex-1 min-w-0">
-                      <div class="flex items-center gap-2">
-                        <i 
-                          class="fas fa-circle text-xs"
-                          :style="{ color: task.status.color }"
-                          :title="task.status.text"
-                        ></i>
-                        <div class="w-6 h-6 rounded-full flex-shrink-0" :title="`Assigned to ${task.assignedUser.name}`">
-                          <img 
-                            v-if="task.assignedUser.image"
-                            :src="task.assignedUser.image" 
-                            :alt="task.assignedUser.name"
-                            class="w-full h-full rounded-full"
-                          />
-                          <i 
-                            v-else
-                            class="fas fa-user w-full h-full rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-gray-500 dark:text-gray-400 text-xs"
-                          ></i>
-                        </div>
-                        <a 
-                          class="truncate min-w-0 lg:max-w-[150px] xl:max-w-[180px] 2xl:max-w-[220px] hover:text-[#5bbcaa] cursor-pointer transition-colors" 
-                          :title="task.name"
-                          @click.stop="openMondayTask(task.boardId, task.id)"
-                        >
-                          {{ task.name }}
-                        </a>
-                        <button 
-                          class="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                          @click.stop="copyToClipboard(task.name)"
-                          title="Copy task name"
-                        >
-                          <i class="fas fa-copy text-xs"></i>
-                        </button>
-                      </div>
-                      <div class="text-sm text-gray-600 dark:text-gray-400 flex-shrink-0 ml-4">
-                        {{ formatTime(task.timeTracked) }}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div v-else class="h-full flex items-center justify-center text-gray-500 dark:text-gray-400">
-              Please select a user to view their tasks
-            </div>
-          </div>
-        </div>
-
-        <!-- UserTimeList Container -->
-        <div id="user-time-list-container" class="col-span-12">
-          <UserTimeList 
-            :selected-user="selectedUser"
-            :selected-date="selectedDate"
-            :selected-period="selectedPeriod"
-          />
+        <!-- User Selection List -->
+        <div id="user-selection" class="flex flex-col gap-1 overflow-y-auto">
+          <button
+            v-for="user in availableUsers"
+            :key="user"
+            :id="`user-button-${user.replace(/\s+/g, '-').toLowerCase()}`"
+            @click="selectedUser = user"
+            :class="[
+              'px-3 py-2 text-sm font-medium rounded-lg transition-colors flex items-center gap-2 w-full',
+              selectedUser === user
+                ? 'bg-[#5bbcaa] text-white hover:bg-[#4ca899]'
+                : 'bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600'
+            ]"
+          >
+            <img 
+              v-if="settingsStore.showUserImages && getUserImage(user)"
+              :src="getUserImage(user)!" 
+              :alt="user"
+              class="w-6 h-6 rounded-full flex-shrink-0"
+            />
+            <i 
+              v-else-if="settingsStore.showUserImages"
+              class="fas fa-user w-6 h-6 rounded-full flex-shrink-0 bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-gray-500 dark:text-gray-400 text-xs"
+            ></i>
+            <span class="truncate">{{ formatUserName(user) }}</span>
+          </button>
         </div>
       </div>
     </div>
@@ -348,7 +385,7 @@ import { useSettingsStore } from '~/stores/settings'
 import { useDailyTimeStore } from '~/stores/dailyTime'
 import { useUserStore } from '~/stores/userStore'
 import { useUserName } from '~/composables/useUserName'
-import { useUserAnalytics, type PeriodType } from '~/composables/useUserAnalytics'
+import { useUserAnalytics, type PeriodType, type GroupingType } from '~/composables/useUserAnalytics'
 import Chart from 'primevue/chart'
 import Calendar from 'primevue/calendar'
 import UserTimeList from '~/components/UserTimeList.vue'
@@ -366,9 +403,16 @@ const periods = [
   { label: 'Total', value: 'total' }
 ] as const
 
+const groupings = [
+  { label: 'Task', value: 'project', icon: 'fa-tasks' },
+  { label: 'Project Name', value: 'projectname', icon: 'fa-folder' },
+  { label: 'Sprint', value: 'sprint', icon: 'fa-rocket' }
+] as const
+
 const selectedPeriod = ref<PeriodType>('weekly')
 const selectedDate = ref(new Date())
 const selectedUser = ref<string | null>(null)
+const selectedGrouping = ref<GroupingType>('project')
 
 // Get analytics data from composable
 const {
@@ -383,11 +427,18 @@ const {
   timeChartOptions,
   projectTasks,
   getProjectStatusColors
-} = useUserAnalytics(selectedPeriod, selectedDate, selectedUser)
+} = useUserAnalytics(selectedPeriod, selectedDate, selectedUser, selectedGrouping)
 
 // Get unique users
 const availableUsers = computed(() => {
   return dailyTimeStore.getUniqueUsers.filter(user => settingsStore.isUserVisible(user))
+})
+
+// Auto-select first user on mount
+onMounted(() => {
+  if (availableUsers.value.length > 0 && !selectedUser.value) {
+    selectedUser.value = availableUsers.value[0]
+  }
 })
 
 // Navigation functions
@@ -510,5 +561,17 @@ const getTotalTasks = () => {
     totalTasks += tasks.length
   }
   return totalTasks
+}
+
+// Get grouping label
+const getGroupingLabel = () => {
+  const grouping = groupings.find(g => g.value === selectedGrouping.value)
+  return grouping?.label || 'Task'
+}
+
+// Get current grouping icon
+const getCurrentGroupingIcon = () => {
+  const grouping = groupings.find(g => g.value === selectedGrouping.value)
+  return grouping?.icon || 'fa-tasks'
 }
 </script> 

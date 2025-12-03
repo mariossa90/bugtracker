@@ -6,6 +6,7 @@ import { useDailyTimeStore } from '~/stores/dailyTime'
 import { useUserStore } from '~/stores/userStore'
 
 export type PeriodType = 'daily' | 'weekly' | 'monthly' | 'total'
+export type GroupingType = 'project' | 'projectname' | 'sprint'
 
 interface ProjectStats {
   total: number
@@ -46,12 +47,47 @@ interface TaskDetail {
 export function useUserAnalytics(
   selectedPeriod: Ref<PeriodType>,
   selectedDate: Ref<Date>,
-  selectedUser: Ref<string | null>
+  selectedUser: Ref<string | null>,
+  groupingMode: Ref<GroupingType>
 ) {
   const mondayStore = useMondayStore()
   const settingsStore = useSettingsStore()
   const dailyTimeStore = useDailyTimeStore()
   const userStore = useUserStore()
+
+  // Helper function to get group name based on grouping mode
+  const getGroupName = (task: any): string => {
+    switch (groupingMode.value) {
+      case 'project':
+        const projectColumn = task.columnValues.find((cv: any) => cv.id === 'project8__1')
+        return projectColumn?.text || 'No Task'
+      case 'projectname':
+        const projectNameColumn = task.columnValues.find((cv: any) => cv.id === 'color_mktaqj05')
+        return projectNameColumn?.text || 'No Project Name'
+      case 'sprint':
+        const sprintColumn = task.columnValues.find((cv: any) => cv.id === 'color_mkx09tgx')
+        return sprintColumn?.text || 'No Sprint'
+      default:
+        return 'Unknown'
+    }
+  }
+
+  // Helper function to get group color based on grouping mode
+  const getGroupColor = (task: any): string => {
+    switch (groupingMode.value) {
+      case 'project':
+        const projectColumn = task.columnValues.find((cv: any) => cv.id === 'project8__1')
+        return projectColumn?.label_style?.color || '#5bbcaa'
+      case 'projectname':
+        const projectNameColumn = task.columnValues.find((cv: any) => cv.id === 'color_mktaqj05')
+        return projectNameColumn?.label_style?.color || '#5bbcaa'
+      case 'sprint':
+        const sprintColumn = task.columnValues.find((cv: any) => cv.id === 'color_mkx09tgx')
+        return sprintColumn?.label_style?.color || '#5bbcaa'
+      default:
+        return '#5bbcaa'
+    }
+  }
 
   // Will implement these computed properties later
   const dateRange = computed(() => {
@@ -97,25 +133,27 @@ export function useUserAnalytics(
     const range = dateRange.value
     
     // Initialize stats with task counts
-    for (const [project, taskCount] of tasksByProject) {
-      stats.set(project, {
+    for (const [group, taskCount] of tasksByProject) {
+      stats.set(group, {
         total: taskCount,
         timeTracked: 0
       })
     }
     
-    // Calculate time tracked per project
+    // Calculate time tracked per group
     if (selectedUser.value) {
       const userId = userStore.users.find(u => u.name === selectedUser.value)?.id.toString()
       
       if (userId) {
         mondayStore.boards.forEach(board => {
           board.tasks.forEach(task => {
-            // Get project name
-            const projectColumn = task.columnValues.find(cv => cv.id === 'project8__1')
-            const projectName = projectColumn?.text || 'No Project'
+            // Get group name based on grouping mode
+            const groupName = getGroupName(task)
             
-            if (!settingsStore.isProjectVisible(projectName)) return
+            // For project mode, check visibility
+            if (groupingMode.value === 'project') {
+              if (!settingsStore.isProjectVisible(groupName)) return
+            }
             
             // Get time tracking columns
             const timeColumns = task.columnValues.filter(cv => 
@@ -128,8 +166,8 @@ export function useUserAnalytics(
                 const timeTracked = calculateTimeFromHistory(timeColumn.history, userId, range)
                 
                 if (timeTracked > 0) {
-                  const currentStats = stats.get(projectName) || { total: 0, timeTracked: 0 }
-                  stats.set(projectName, {
+                  const currentStats = stats.get(groupName) || { total: 0, timeTracked: 0 }
+                  stats.set(groupName, {
                     ...currentStats,
                     timeTracked: currentStats.timeTracked + timeTracked
                   })
@@ -148,8 +186,8 @@ export function useUserAnalytics(
                   const timeTracked = calculateTimeFromHistory(timeColumn.history, userId, range)
                   
                   if (timeTracked > 0) {
-                    const currentStats = stats.get(projectName) || { total: 0, timeTracked: 0 }
-                    stats.set(projectName, {
+                    const currentStats = stats.get(groupName) || { total: 0, timeTracked: 0 }
+                    stats.set(groupName, {
                       ...currentStats,
                       timeTracked: currentStats.timeTracked + timeTracked
                     })
@@ -253,7 +291,7 @@ export function useUserAnalytics(
     aspectRatio: 1,
     plugins: {
       legend: {
-        position: 'right' as const,
+        position: 'bottom' as const,
         align: 'center' as const,
         labels: {
           color: '#64748b',
@@ -283,7 +321,7 @@ export function useUserAnalytics(
     aspectRatio: 1,
     plugins: {
       legend: {
-        position: 'right' as const,
+        position: 'bottom' as const,
         align: 'center' as const,
         labels: {
           color: '#64748b',
@@ -313,11 +351,7 @@ export function useUserAnalytics(
     aspectRatio: 1,
     plugins: {
       legend: {
-        position: 'bottom',
-        align: 'end',
-        labels: {
-          color: '#64748b'
-        }
+        display: false
       },
       tooltip: {
         callbacks: {
@@ -368,11 +402,7 @@ export function useUserAnalytics(
     aspectRatio: 1,
     plugins: {
       legend: {
-        position: 'bottom',
-        align: 'end',
-        labels: {
-          color: '#64748b'
-        }
+        display: false
       },
       tooltip: {
         callbacks: {
@@ -422,7 +452,7 @@ export function useUserAnalytics(
   const calculateUserTasksByProject = computed(() => {
     if (!selectedUser.value) return new Map<string, number>()
     
-    const projectTasks = new Map<string, number>()
+    const groupTasks = new Map<string, number>()
     const range = dateRange.value
     
     mondayStore.boards.forEach(board => {
@@ -434,9 +464,8 @@ export function useUserAnalytics(
         // Skip tasks with unwanted statuses
         if (taskStatus === 'Cancelled') return
 
-        // Get project name
-        const projectColumn = task.columnValues.find(cv => cv.id === 'project8__1')
-        const projectName = projectColumn?.text || 'No Project'
+        // Get group name based on grouping mode
+        const groupName = getGroupName(task)
 
         // Check if user has tracked time on this task
         const timeColumns = task.columnValues.filter(cv => 
@@ -457,9 +486,9 @@ export function useUserAnalytics(
 
         // Count task if user tracked time on it
         if (hasTimeInPeriod) {
-          projectTasks.set(
-            projectName, 
-            (projectTasks.get(projectName) || 0) + 1
+          groupTasks.set(
+            groupName, 
+            (groupTasks.get(groupName) || 0) + 1
           )
         }
         
@@ -481,45 +510,46 @@ export function useUserAnalytics(
 
           // Count subitem if user tracked time on it
           if (hasSubitemTimeInPeriod) {
-            projectTasks.set(
-              projectName,
-              (projectTasks.get(projectName) || 0) + 1
+            groupTasks.set(
+              groupName,
+              (groupTasks.get(groupName) || 0) + 1
             )
           }
         })
       })
     })
     
-    // Filter visible projects
+    // Filter visible projects only if grouping by project
     const filteredTasks = new Map<string, number>()
-    for (const [project, count] of projectTasks) {
-      if (settingsStore.isProjectVisible(project)) {
-        filteredTasks.set(project, count)
+    for (const [group, count] of groupTasks) {
+      if (groupingMode.value === 'project') {
+        if (settingsStore.isProjectVisible(group)) {
+          filteredTasks.set(group, count)
+        }
+      } else {
+        filteredTasks.set(group, count)
       }
     }
     
     return filteredTasks
   })
 
-  // Add this helper function to get project colors
-  const getProjectStatusColors = (projects: string[]) => {
+  // Add this helper function to get group colors
+  const getProjectStatusColors = (groups: string[]) => {
     const colors = new Map<string, string>()
     
     mondayStore.boards.forEach(board => {
       board.tasks.forEach(task => {
-        const projectColumn = task.columnValues.find(cv => cv.id === 'project8__1')
-        const projectName = projectColumn?.text || 'No Project'
+        const groupName = getGroupName(task)
         
-        if (!colors.has(projectName)) {
-          const labelStyle = projectColumn?.label_style
-          if (labelStyle?.color) {
-            colors.set(projectName, labelStyle.color)
-          }
+        if (!colors.has(groupName)) {
+          const color = getGroupColor(task)
+          colors.set(groupName, color)
         }
       })
     })
 
-    return projects.map(project => colors.get(project) || '#5bbcaa')
+    return groups.map(group => colors.get(group) || '#5bbcaa')
   }
 
   // Add this helper function to calculate time from history entries
@@ -570,10 +600,13 @@ export function useUserAnalytics(
     
     mondayStore.boards.forEach(board => {
       board.tasks.forEach(task => {
-        const projectColumn = task.columnValues.find(cv => cv.id === 'project8__1')
-        const projectName = projectColumn?.text || 'No Project'
+        // Get group name based on grouping mode
+        const groupName = getGroupName(task)
         
-        if (!settingsStore.isProjectVisible(projectName)) return
+        // For project mode, check visibility
+        if (groupingMode.value === 'project') {
+          if (!settingsStore.isProjectVisible(groupName)) return
+        }
         
         // Get assigned user info
         const personColumn = task.columnValues.find(cv => cv.id === 'person')
@@ -611,8 +644,8 @@ export function useUserAnalytics(
         // Add task if it has time tracked OR if it's total view and assigned to user
         if ((taskTimeTracked > 0 || subitemTimeTracked > 0) || 
             (selectedPeriod.value === 'total' && assignedUserName === selectedUser.value)) {
-          const projectTasks = tasks.get(projectName) || []
-          projectTasks.push({
+          const groupTasks = tasks.get(groupName) || []
+          groupTasks.push({
             id: task.id,
             name: task.name,
             timeTracked: taskTimeTracked + subitemTimeTracked,
@@ -626,12 +659,12 @@ export function useUserAnalytics(
             },
             boardId: task.boardId
           })
-          tasks.set(projectName, projectTasks)
+          tasks.set(groupName, groupTasks)
         }
       })
     })
     
-    // Sort projects by total time
+    // Sort groups by total time
     return new Map([...tasks.entries()].sort((a, b) => {
       const aTotal = a[1].reduce((sum, task) => sum + task.timeTracked, 0)
       const bTotal = b[1].reduce((sum, task) => sum + task.timeTracked, 0)

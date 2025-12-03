@@ -77,7 +77,7 @@ export const useSettingsStore = defineStore('settings', {
     updateInterval: 5,
     showUserImages: true,
     compactViewMode: false,
-    showFirstNameOnly: false,
+    showFirstNameOnly: true,
     selectedDate: new Date(), // Initialize with current date
     selectedMenu: 'general', // Default selected menu
     hiddenProjects: [], // Initialize empty hidden projects array

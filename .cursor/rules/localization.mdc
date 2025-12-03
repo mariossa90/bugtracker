@@ -1,0 +1,202 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+# Translation Workflow Rules
+
+## CRITICAL TRANSLATION RULES
+
+### ⚠️ NEVER MODIFY TRANSLATION FILES
+- **NEVER** add new keys to `/frontend/src/locales/*.json` files
+- **NEVER** modify existing translation keys in any locale files
+- **ALWAYS** follow the visual indicator workflow described below
+
+### HARDCODED TEXT WORKFLOW
+
+When implementing features that require translatable text:
+
+1. **Use Direct Text with Visual Indicators**
+   ```vue
+   <!-- TODO_TRANSLATE: Need ID for button text -->
+   <wjButton>🔴 Save Changes</wjButton>
+   
+   <!-- TODO_TRANSLATE: Need ID for confirmation message -->
+   <ConfirmationModal message="🔴 Are you sure you want to delete this item?" />
+   ```
+
+2. **Visual Indicator Rules**
+   - Use 🔴 (red circle emoji) prefix for ALL hardcoded translatable text
+   - Add `<!-- TODO_TRANSLATE: -->` comments above each hardcoded text element
+   - Keep comments brief but descriptive
+
+3. **Update locales/TRANSLATION_REQUESTS.md**
+   - **ALWAYS** add entries to THREE sections: "Quick Copy", "Ready for Implementation", and "Pending Translations"
+   - **STANDARD PRACTICE**: Keep file minimal and context-efficient for AI agents
+   
+   **Quick Copy Section Format (Top of file):**
+   ```markdown
+   ## Quick Copy (Database Import)
+   
+   Save Changes
+   Are you sure you want to delete this item?
+   ```
+   
+   **Ready for Implementation Format:**
+   ```markdown
+   ## Ready for Implementation
+   
+   ### Feature Name - YYYY-MM-DD
+   **File:** `path/to/component.vue` **Lines:** 42, 58
+   
+   - [ ] TRANSLATE_ID_PLACEHOLDER="Save Changes" LINE=42
+   - [ ] TRANSLATE_ID_PLACEHOLDER="Are you sure you want to delete this item?" LINE=58
+   ```
+
+   **Pending Translations Format:**
+   ```markdown
+   ## Pending Translations
+   
+   ### Feature Name - YYYY-MM-DD
+   **File:** `path/to/component.vue`
+   
+   Line 42: 🔴 Save Changes
+   Line 58: 🔴 Are you sure you want to delete this item?
+   ```
+
+### IMPLEMENTATION WORKFLOW
+
+When developer instructs you to implement ready translations:
+
+1. **Read Ready for Implementation Section**
+   - Check `frontend/src/locales/TRANSLATION_REQUESTS.md` "Ready for Implementation" section
+   - Look for entries with assigned ID numbers (checkboxes remain unchecked)
+   - Use LINE numbers for precise grep searches
+
+2. **Replace Hardcoded Text**
+   - Use grep with line numbers: `grep -n "🔴 Save Changes" path/to/component.vue`
+   - Replace with `{{ t('ID_XXXXX') }}` or `:attribute="t('ID_XXXXX')"`
+   - Ensure imports: `import { useI18n } from 'vue-i18n'` and `const { t } = useI18n()`
+
+3. **Mark as Complete**
+   - Add checkmark: `- [x] ID_01234="Save Changes" LINE=42`
+   - Once ALL items in a section have checkmarks, **DELETE the entire section**
+   - Also delete corresponding entries from "Quick Copy" and "Pending Translations"
+   - **NEVER keep completed translations in the file** - they're permanent in JSON files
+
+### TRANSLATION MAINTAINER WORKFLOW
+
+When translation maintainers prepare translations for implementation:
+
+1. Copy text from "Quick Copy" section and paste into database
+2. After database assigns IDs, replace `TRANSLATE_ID_PLACEHOLDER` with actual IDs in "Ready for Implementation"
+3. Remove corresponding lines from "Quick Copy" section once IDs are assigned
+4. Notify developer that translations are ready
+
+### AUTOMATED ID MATCHING
+
+Use the translation matcher script to automatically populate IDs for existing translations:
+
+```bash
+npm run match-translation-ids
+```
+
+This script will:
+- Scan `en.json` for exact text matches (case-insensitive)
+- Replace `TRANSLATE_ID_PLACEHOLDER` with actual translation IDs
+- Process format: `TRANSLATE_ID_PLACEHOLDER="Text" LINE=XX`
+- Remove matched entries from "Pending Translations"
+
+### EXAMPLE REPLACEMENT PATTERNS
+
+```vue
+<!-- Before (Line 42) -->
+<wjFunction label="🔴 Machine Temperature" />
+
+<!-- After -->
+<wjFunction :label="t('ID_01234')" />
+```
+
+**In TRANSLATION_REQUESTS.md:**
+```markdown
+- [ ] TRANSLATE_ID_PLACEHOLDER="Machine Temperature" LINE=42
+
+# After implementation:
+- [x] ID_01234="Machine Temperature" LINE=42
+
+# After all items have checkmarks, DELETE the entire section
+```
+
+### SEARCH PATTERNS
+
+To find hardcoded text needing translation:
+- Search for: `🔴` (red circle emoji)
+- Search for: `TODO_TRANSLATE`
+- Use line numbers from TRANSLATION_REQUESTS.md for precise targeting
+
+### BENEFITS OF THIS APPROACH
+
+✅ Quick Copy section for instant database import
+✅ Line numbers for precise grep/search operations
+✅ Checkbox system for tracking implementation progress
+✅ Automatic cleanup when all translations complete
+✅ Minimal context consumption for AI agents
+✅ No unnecessary historical data retention
+
+### COMMON DEVELOPER COMMANDS
+
+When developer says:
+- "Implement the ready translations" → Check Ready for Implementation, use LINE numbers for grep, replace 🔴 indicators, mark with checkmarks, then start review-gate
+- "Replace the red circle text" → Find 🔴 using line numbers from TRANSLATION_REQUESTS.md
+- "Clean up translation requests" → Delete sections where all items have checkmarks [x]
+- "Add new translations" → Create entries in all three sections (Quick Copy, Ready, Pending)
+
+### AI AGENT STANDARD PRACTICE
+
+**MANDATORY**: When adding translation requests, ALWAYS create entries in THREE sections:
+
+1. **Quick Copy Section**: Plain text only, no quotes, one per line
+   ```
+   Save Changes
+   Delete this item
+   ```
+
+2. **Ready for Implementation**: Checkbox list with line numbers
+   ```
+   - [ ] TRANSLATE_ID_PLACEHOLDER="Save Changes" LINE=42
+   - [ ] TRANSLATE_ID_PLACEHOLDER="Delete this item" LINE=58
+   ```
+
+3. **Pending Translations**: Line-annotated visual indicators
+   ```
+   Line 42: 🔴 Save Changes
+   Line 58: 🔴 Delete this item
+   ```
+
+**After Implementation:**
+1. Replace `TRANSLATE_ID_PLACEHOLDER` with actual ID
+2. Add checkmark: `- [x] ID_01234="Save Changes" LINE=42`
+3. When ALL items have checkmarks [x], **DELETE the entire section** from all three locations
+4. This keeps the file minimal and reduces context for future AI operations
+
+### LINE NUMBER EXTRACTION
+
+When creating translation requests:
+1. Note the exact line number where 🔴 text appears
+2. Include in format: `LINE=XX`
+3. This enables precise grep: `grep -n "🔴 Text" file.vue` to verify line numbers
+4. Makes it easy for AI to find and replace without ambiguity
+
+### DO NOT
+
+❌ Add translation keys to JSON files
+❌ Modify existing translation keys  
+❌ Use hardcoded text without 🔴 indicator
+❌ Skip TODO_TRANSLATE comments
+❌ Forget to update locales/TRANSLATION_REQUESTS.md
+❌ Leave 🔴 indicators in production code
+❌ **Keep completed translations in TRANSLATION_REQUESTS.md (delete entire sections)**
+❌ **Create entries without line numbers**
+❌ **Create entries without all three sections (Quick Copy, Ready, Pending)**
+
+This workflow ensures clean collaboration between AI agents, developers, and translation maintainers while preventing conflicts with the cloud translation database and minimizing context consumption.

@@ -151,7 +151,10 @@ export const useMondayStore = defineStore('monday', {
                       "zeitleiste",
                       "datum1",
                       "datum8",
-                      "project8__1"
+                      "project8__1",
+                      "color_mktaqj05",
+                      "color_mkxp4zcz",
+                      "color_mkx09tgx"
                     ]) {
                       id
                       text
