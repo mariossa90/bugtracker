@@ -347,8 +347,31 @@
                     <p id="bug-detail-created-date" class="text-sm text-gray-900 dark:text-gray-100">
                       <span id="bug-detail-created-label" class="text-gray-500 dark:text-gray-400">Reported by {{ getCreatorName(selectedBug.creatorId) }} on:</span> {{ selectedBug.createdDate || 'Unknown' }}
                     </p>
-                   
                   </div>
+                  
+                  <!-- Status Change Info (for Resolved, In Development, and Cancelled) -->
+                  <template v-if="getCurrentStatusChangeInfo && selectedBug.statusBug !== 'Not Started'">
+                    <div id="bug-detail-separator-2" class="w-px h-8 bg-gray-300 dark:bg-gray-600 flex-shrink-0"></div>
+                    
+                    <div id="bug-detail-status-change" class="flex-shrink-0">
+                      <p id="bug-detail-status-change-info" class="text-sm">
+                        <span id="bug-detail-status-change-label" class="text-gray-500 dark:text-gray-400">
+                          <template v-if="selectedBug.statusBug === 'Resolved'">Resolved</template>
+                          <template v-else-if="selectedBug.statusBug === 'In Development'">In Development</template>
+                          <template v-else-if="selectedBug.statusBug === 'Cancelled'">Cancelled</template>
+                          by {{ getCurrentStatusChangeInfo.changedBy }} on:
+                        </span> 
+                        <span 
+                          class="font-medium"
+                          :class="{
+                            'text-green-600 dark:text-green-400': selectedBug.statusBug === 'Resolved',
+                            'text-orange-600 dark:text-orange-400': selectedBug.statusBug === 'In Development',
+                            'text-red-600 dark:text-red-400': selectedBug.statusBug === 'Cancelled'
+                          }"
+                        >{{ getCurrentStatusChangeInfo.changedAt }}</span>
+                      </p>
+                    </div>
+                  </template>
                 </div>
               </div>
               
@@ -395,6 +418,7 @@
                     <p v-else id="bug-detail-outcomes-empty" class="text-base text-gray-500 dark:text-gray-400 italic">No outcomes information provided</p>
                   </div>
                 </div>
+
               </div>
 
               <!-- Right Column: Media Carousel -->
@@ -586,7 +610,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useUserStore } from '~/stores/userStore'
 
 interface Props {
@@ -615,6 +639,13 @@ interface Asset {
   file_size: number
 }
 
+interface StatusChangeHistory {
+  from_status: string
+  to_status: string
+  changed_by_user_id: string
+  changed_at: string
+}
+
 interface Bug {
   id: string
   name: string
@@ -636,6 +667,7 @@ interface Bug {
   createdDate: string
   files: any[]
   assets: Asset[]
+  statusChangeHistory?: StatusChangeHistory[]
 }
 
 const filteredBugs = computed<Bug[]>(() => {
@@ -720,7 +752,8 @@ const filteredBugs = computed<Bug[]>(() => {
         creatorId,
         createdDate,
         files,
-        assets
+        assets,
+        statusChangeHistory: item.statusChangeHistory || []
       }
     })
 })
@@ -834,6 +867,7 @@ const getMondayUrl = (itemId: string, boardId: string): string => {
 const selectBug = (bug: Bug) => {
   selectedBug.value = bug
   currentMediaIndex.value = 0 // Reset to first media when selecting a new bug
+  scrollToSelectedBug(bug.id)
 }
 
 const getCreatorName = (creatorId: string): string => {
@@ -843,6 +877,58 @@ const getCreatorName = (creatorId: string): string => {
   const user = userStore.users.find(u => u.id === creatorId)
   return user?.name || 'Unknown User'
 }
+
+const formatActivityTimestamp = (timestamp: string): string => {
+  if (!timestamp) return 'Unknown'
+  
+  try {
+    // Monday.com activity logs use 17-digit Unix time (nanoseconds precision)
+    // Convert to milliseconds by dividing by 10,000 and rounding
+    const milliseconds = Math.round(parseInt(timestamp) / 10000)
+    const date = new Date(milliseconds)
+    
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  } catch (e) {
+    return 'Unknown'
+  }
+}
+
+const getCurrentStatusChangeInfo = computed(() => {
+  if (!selectedBug.value || !selectedBug.value.statusChangeHistory || selectedBug.value.statusChangeHistory.length === 0) {
+    return null
+  }
+  
+  const currentStatus = selectedBug.value.statusBug
+  const history = selectedBug.value.statusChangeHistory
+  
+  // Find the most recent change TO the current status (case-insensitive match)
+  // Iterate backwards through history (newest first)
+  for (let i = history.length - 1; i >= 0; i--) {
+    const change = history[i]
+    if (change && change.to_status) {
+      // Handle both string and object formats for to_status
+      const toStatusText = typeof change.to_status === 'string' 
+        ? change.to_status 
+        : change.to_status.text || ''
+      
+      if (toStatusText && toStatusText.toLowerCase() === currentStatus.toLowerCase()) {
+        return {
+          changedBy: getCreatorName(change.changed_by_user_id),
+          changedAt: formatActivityTimestamp(change.changed_at),
+          status: currentStatus
+        }
+      }
+    }
+  }
+  
+  return null
+})
 
 const isVideo = (filename: string): boolean => {
   if (!filename) return false
@@ -917,19 +1003,67 @@ const copyTicketName = async () => {
   }
 }
 
+const scrollToSelectedBug = (bugId: string) => {
+  nextTick(() => {
+    const bugElement = document.getElementById(`bug-item-${bugId}`)
+    if (bugElement) {
+      bugElement.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' })
+    }
+  })
+}
+
 const handleKeydown = (event: KeyboardEvent) => {
-  if (!showMediaModal.value) return
+  // Handle media modal navigation
+  if (showMediaModal.value) {
+    switch (event.key) {
+      case 'Escape':
+        closeMediaModal()
+        break
+      case 'ArrowLeft':
+        previousMedia()
+        break
+      case 'ArrowRight':
+        nextMedia()
+        break
+    }
+    return
+  }
   
-  switch (event.key) {
-    case 'Escape':
-      closeMediaModal()
-      break
-    case 'ArrowLeft':
-      previousMedia()
-      break
-    case 'ArrowRight':
-      nextMedia()
-      break
+  // Handle bug list navigation
+  if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+    event.preventDefault() // Prevent page scroll
+    
+    const currentBugs = currentStatusBugs.value
+    if (currentBugs.length === 0) return
+    
+    if (!selectedBug.value) {
+      // No bug selected, select the first one
+      selectedBug.value = currentBugs[0]
+      currentMediaIndex.value = 0
+      scrollToSelectedBug(currentBugs[0].id)
+      return
+    }
+    
+    const currentIndex = currentBugs.findIndex(bug => bug.id === selectedBug.value?.id)
+    if (currentIndex === -1) {
+      // Current bug not in list, select first
+      selectedBug.value = currentBugs[0]
+      currentMediaIndex.value = 0
+      scrollToSelectedBug(currentBugs[0].id)
+      return
+    }
+    
+    if (event.key === 'ArrowUp' && currentIndex > 0) {
+      // Navigate to previous bug
+      selectedBug.value = currentBugs[currentIndex - 1]
+      currentMediaIndex.value = 0
+      scrollToSelectedBug(currentBugs[currentIndex - 1].id)
+    } else if (event.key === 'ArrowDown' && currentIndex < currentBugs.length - 1) {
+      // Navigate to next bug
+      selectedBug.value = currentBugs[currentIndex + 1]
+      currentMediaIndex.value = 0
+      scrollToSelectedBug(currentBugs[currentIndex + 1].id)
+    }
   }
 }
 

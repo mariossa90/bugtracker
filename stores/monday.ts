@@ -19,6 +19,23 @@ interface TimeTrackingHistory {
   started_user_id: number;
 }
 
+interface ActivityLog {
+  id: string;
+  event: string;
+  data: string;
+  account_id: string;
+  entity: string;
+  user_id: string;
+  created_at: string;
+}
+
+interface StatusChangeHistory {
+  from_status: string;
+  to_status: string;
+  changed_by_user_id: string;
+  changed_at: string;
+}
+
 interface ColumnValue {
   id: string
   text: string | null
@@ -69,6 +86,7 @@ interface Task {
   columnValues: ColumnValue[]
   assets?: Asset[]
   subitems: SubItem[]
+  statusChangeHistory?: StatusChangeHistory[]
   // Add other relevant task properties based on your Monday.com schema
 }
 
@@ -199,6 +217,15 @@ export const useMondayStore = defineStore('monday', {
                     }
                   }
                 }
+                activity_logs(limit: 1000) {
+                  id
+                  event
+                  data
+                  account_id
+                  entity
+                  user_id
+                  created_at
+                }
               }
             `)
             .join('\n')
@@ -245,56 +272,173 @@ export const useMondayStore = defineStore('monday', {
           }
         }
 
-        // Create a Map to deduplicate items across all boards
-        const uniqueItems = new Map<string, Item>()
+        // After fetching all items, fetch activity logs for each board to get status change history
+        const activityLogsMap = new Map<string, ActivityLog[]>() // Map<ItemId, ActivityLog[]>
         
-        for (const [, itemMap] of boardItems) {
-          // Add items to the unique items map
-          for (const [itemId, item] of itemMap) {
-            uniqueItems.set(itemId, item)
+        for (const [boardId] of boardCursors) {
+          const boardData = await $fetch<any>('/api/monday/tasks', {
+            method: 'POST',
+            body: {
+              query: `{
+                boards(ids: [${boardId}]) {
+                  activity_logs(limit: 1000) {
+                    id
+                    event
+                    data
+                    account_id
+                    entity
+                    user_id
+                    created_at
+                  }
+                }
+              }`
+            }
+          })
+          
+          if (boardData?.data?.boards?.[0]?.activity_logs) {
+            const logs = boardData.data.boards[0].activity_logs as ActivityLog[]
+            
+            // Group activity logs by item ID
+            logs.forEach((log: ActivityLog) => {
+              // Filter for status change events related to items (entity: pulse)
+              if (log.entity === 'pulse' && (log.event === 'update_column_value' || log.event === 'change_column_value')) {
+                try {
+                  const logData = JSON.parse(log.data)
+                  const itemId = logData.pulse_id || logData.item_id
+                  
+                  if (itemId) {
+                    const itemLogs = activityLogsMap.get(itemId.toString()) || []
+                    itemLogs.push(log)
+                    activityLogsMap.set(itemId.toString(), itemLogs)
+                  }
+                } catch (e) {
+                  // Skip invalid JSON
+                }
+              }
+            })
           }
         }
 
-        const allItems = Array.from(uniqueItems.values())
-
-        // Only update the store once all items are collected
-        if (allItems.length > 0) {
-          this.boards = [{
-            id: 'Combined Boards',
-            name: 'Combined Boards',
-            columns: [],
-            groups: [],
-            tasks: allItems.map((item: Item) => {
-              // Find status column (could be status, color_mkvxkwcm, or other status columns)
-              const statusValue = item.column_values.find(cv => 
-                cv.type === 'status' || cv.id === 'status' || cv.id === 'color_mkvxkwcm'
-              )
-
-              // Find which board this item came from
-              const boardId = Array.from(boardItems.entries()).find(
-                ([_, itemMap]) => itemMap.has(item.id)
-              )?.[0] || 'unknown'
-
-              return {
-                id: item.id,
-                name: item.name,
-                status: statusValue?.text || 'Not Started',
-                boardId,
-                columnValues: item.column_values,
-                assets: item.assets,
-                subitems: item.subitems,
+        // Helper function to parse status change history from activity logs
+        const parseStatusChangeHistory = (itemId: string, statusColumnId: string): StatusChangeHistory[] => {
+          const itemLogs = activityLogsMap.get(itemId) || []
+          const statusChanges: StatusChangeHistory[] = []
+          
+          itemLogs.forEach((log: ActivityLog) => {
+            try {
+              const logData = JSON.parse(log.data)
+              
+              // Check if this log is about the status column
+              if (logData.column_id === statusColumnId || logData.column_id === 'status' || logData.column_id === 'color_mkvxkwcm') {
+                // Parse the value and previous_value which may be JSON strings
+                let toStatus = ''
+                let fromStatus = ''
+                
+                try {
+                  if (typeof logData.value === 'string') {
+                    const valueObj = JSON.parse(logData.value)
+                    toStatus = valueObj.text || valueObj.label || ''
+                  } else if (logData.value?.text) {
+                    toStatus = logData.value.text
+                  } else if (logData.value?.label) {
+                    toStatus = logData.value.label
+                  }
+                } catch (e) {
+                  toStatus = String(logData.value || '')
+                }
+                
+                try {
+                  if (typeof logData.previous_value === 'string') {
+                    const prevValueObj = JSON.parse(logData.previous_value)
+                    fromStatus = prevValueObj.text || prevValueObj.label || ''
+                  } else if (logData.previous_value?.text) {
+                    fromStatus = logData.previous_value.text
+                  } else if (logData.previous_value?.label) {
+                    fromStatus = logData.previous_value.label
+                  }
+                } catch (e) {
+                  fromStatus = String(logData.previous_value || '')
+                }
+                
+                if (toStatus) {
+                  const change: StatusChangeHistory = {
+                    from_status: fromStatus,
+                    to_status: toStatus,
+                    changed_by_user_id: log.user_id,
+                    changed_at: log.created_at
+                  }
+                  
+                  statusChanges.push(change)
+                }
               }
-            })
-          }]
-        } else {
-          this.boards = []
+            } catch (e) {
+              // Skip invalid JSON
+            }
+          })
+          
+          // Sort by created_at (oldest first)
+          return statusChanges.sort((a, b) => {
+            const timeA = BigInt(a.changed_at)
+            const timeB = BigInt(b.changed_at)
+            return timeA < timeB ? -1 : timeA > timeB ? 1 : 0
+          })
         }
-      } catch (error) {
-        this.error = error instanceof Error ? error.message : 'An error occurred while fetching board data'
-      } finally {
-        this.loading = false
+
+        // Create a Map to deduplicate items across all boards
+        const uniqueItems = new Map<string, Item>()
+          
+          for (const [, itemMap] of boardItems) {
+            // Add items to the unique items map
+            for (const [itemId, item] of itemMap) {
+              uniqueItems.set(itemId, item)
+            }
+          }
+
+          const allItems = Array.from(uniqueItems.values())
+
+          // Only update the store once all items are collected
+          if (allItems.length > 0) {
+            this.boards = [{
+              id: 'Combined Boards',
+              name: 'Combined Boards',
+              columns: [],
+              groups: [],
+              tasks: allItems.map((item: Item) => {
+                // Find status column (could be status, color_mkvxkwcm, or other status columns)
+                const statusValue = item.column_values.find(cv => 
+                  cv.type === 'status' || cv.id === 'status' || cv.id === 'color_mkvxkwcm'
+                )
+
+                // Find which board this item came from
+                const boardId = Array.from(boardItems.entries()).find(
+                  ([_, itemMap]) => itemMap.has(item.id)
+                )?.[0] || 'unknown'
+
+                // Get status change history for this item
+                const statusColumnId = statusValue?.id || 'status'
+                const statusChangeHistory = parseStatusChangeHistory(item.id, statusColumnId)
+
+                return {
+                  id: item.id,
+                  name: item.name,
+                  status: statusValue?.text || 'Not Started',
+                  boardId,
+                  columnValues: item.column_values,
+                  assets: item.assets,
+                  subitems: item.subitems,
+                  statusChangeHistory,
+                }
+              })
+            }]
+          } else {
+            this.boards = []
+          }
+        } catch (error) {
+          this.error = error instanceof Error ? error.message : 'An error occurred while fetching board data'
+        } finally {
+          this.loading = false
+        }
       }
-    }
   },
 
   getters: {
