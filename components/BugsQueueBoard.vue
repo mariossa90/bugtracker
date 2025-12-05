@@ -302,9 +302,18 @@
           <div id="bug-detail-header" class="flex-none px-6 py-5 bg-gray-50 dark:bg-gray-750 border-b border-gray-200 dark:border-gray-700">
             <div id="bug-detail-header-wrapper" class="flex items-start justify-between gap-4">
               <div id="bug-detail-header-left" class="flex-1 min-w-0">
-                <h2 id="bug-detail-title" class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-3">
-                  {{ selectedBug.name }}
-                </h2>
+                <div class="flex items-center gap-2 mb-3">
+                  <h2 id="bug-detail-title" class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                    {{ selectedBug.name }}
+                  </h2>
+                  <button
+                    @click="copyTicketName"
+                    class="flex-shrink-0 p-1.5 text-gray-500 hover:text-[#5bbcaa] hover:bg-gray-100 dark:hover:bg-gray-600 rounded transition-colors"
+                    title="Copy ticket name"
+                  >
+                    <i class="fas fa-copy text-sm"></i>
+                  </button>
+                </div>
                 <div id="bug-detail-header-info-row" class="flex items-center gap-4">
                   <div id="bug-detail-badges" class="flex items-center gap-2.5 flex-wrap">
                     <span 
@@ -894,6 +903,18 @@ const openMediaModal = () => {
 
 const closeMediaModal = () => {
   showMediaModal.value = false
+}
+
+const copyTicketName = async () => {
+  if (!selectedBug.value) return
+  
+  try {
+    await navigator.clipboard.writeText(selectedBug.value.name)
+    // Optional: You could add a toast notification here to confirm the copy
+    console.log('Ticket name copied to clipboard:', selectedBug.value.name)
+  } catch (err) {
+    console.error('Failed to copy ticket name:', err)
+  }
 }
 
 const handleKeydown = (event: KeyboardEvent) => {
