@@ -388,14 +388,14 @@
             </div>
           </div>
 
-          <!-- Detail Body - Two Column Layout - Level 1 Background -->
+          <!-- Detail Body - Two Column Layout (60/40) - Level 1 Background -->
           <div id="bug-detail-body" class="flex-1 overflow-y-auto p-6 bg-white dark:bg-gray-800">
-            <div id="bug-detail-content" class="grid grid-cols-2 gap-6">
-              <!-- Left Column: Text Information -->
-              <div id="bug-detail-left-column" class="space-y-6">
+            <div id="bug-detail-content" class="grid grid-cols-5 gap-6">
+              <!-- Left Column: Text Information (60%) -->
+              <div id="bug-detail-left-column" class="col-span-3 space-y-6">
                 <!-- Description - Level 3 -->
-                <div id="bug-detail-description-container">
-                  <label id="bug-detail-description-label" class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-2 block">Bug Description</label>
+                <div id="bug-detail-description-container" class="border-l-[3px] border-blue-500 pl-4">
+                  <label id="bug-detail-description-label" class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-2 block"><i class="fas fa-align-left text-sm mr-2 text-blue-500 dark:text-blue-400"></i>Bug Description</label>
                   <div id="bug-detail-description-content" class="p-4 bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-300 dark:border-gray-600">
                     <p v-if="selectedBug.description" id="bug-detail-description-text" class="text-base text-gray-900 dark:text-gray-100 whitespace-pre-wrap leading-relaxed">{{ selectedBug.description }}</p>
                     <p v-else id="bug-detail-description-empty" class="text-base text-gray-500 dark:text-gray-400 italic">No description provided</p>
@@ -403,8 +403,8 @@
                 </div>
 
                 <!-- Reproduce Steps - Level 3 -->
-                <div id="bug-detail-reproduce-container">
-                  <label id="bug-detail-reproduce-label" class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-2 block">Steps to Reproduce</label>
+                <div id="bug-detail-reproduce-container" class="border-l-[3px] border-amber-500 pl-4">
+                  <label id="bug-detail-reproduce-label" class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-2 block"><i class="fas fa-list-ol text-sm mr-2 text-amber-500 dark:text-amber-400"></i>Steps to Reproduce</label>
                   <div id="bug-detail-reproduce-content" class="p-4 bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-300 dark:border-gray-600">
                     <p v-if="selectedBug.reproduceSteps" id="bug-detail-reproduce-text" class="text-base text-gray-900 dark:text-gray-100 whitespace-pre-wrap leading-relaxed">{{ selectedBug.reproduceSteps }}</p>
                     <p v-else id="bug-detail-reproduce-empty" class="text-base text-gray-500 dark:text-gray-400 italic">No reproduction steps provided</p>
@@ -412,8 +412,8 @@
                 </div>
 
                 <!-- Outcomes - Level 3 -->
-                <div id="bug-detail-outcomes-container">
-                  <label id="bug-detail-outcomes-label" class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-2 block">Expected vs Actual Outcomes</label>
+                <div id="bug-detail-outcomes-container" class="border-l-[3px] border-violet-500 pl-4">
+                  <label id="bug-detail-outcomes-label" class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-2 block"><i class="fas fa-exchange-alt text-sm mr-2 text-violet-500 dark:text-violet-400"></i>Expected vs Actual Outcomes</label>
                   <div id="bug-detail-outcomes-content" class="p-4 bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-300 dark:border-gray-600">
                     <p v-if="selectedBug.outcomes" id="bug-detail-outcomes-text" class="text-base text-gray-900 dark:text-gray-100 whitespace-pre-wrap leading-relaxed">{{ selectedBug.outcomes }}</p>
                     <p v-else id="bug-detail-outcomes-empty" class="text-base text-gray-500 dark:text-gray-400 italic">No outcomes information provided</p>
@@ -422,162 +422,191 @@
 
               </div>
 
-              <!-- Right Column: Media Carousel -->
-              <div id="bug-detail-media-container">
-                <label id="bug-detail-media-label" class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-2 block">Pictures / Videos</label>
-                
-                <div v-if="displayFiles.length > 0" id="bug-detail-media-content" class="space-y-4">
-                  <!-- Media Carousel - Level 3 -->
-                  <div id="bug-detail-media-carousel" class="relative bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden shadow-sm">
-                    <!-- Current Media Display -->
-                    <div id="bug-detail-media-display" class="relative aspect-video bg-black flex items-center justify-center cursor-pointer" @click="openMediaModal">
-                      <!-- Video Player -->
-                      <video 
-                        v-if="isVideo(displayFiles[currentMediaIndex].name)"
-                        id="bug-detail-media-video"
-                        controls
-                        class="w-full h-full object-contain"
-                        :src="displayFiles[currentMediaIndex].public_url || displayFiles[currentMediaIndex].url"
-                      >
-                        Your browser does not support the video tag.
-                      </video>
-                      
-                      <!-- Image Display -->
-                      <img 
-                        v-else-if="isImage(displayFiles[currentMediaIndex].name)"
-                        id="bug-detail-media-image"
-                        :src="displayFiles[currentMediaIndex].public_url || displayFiles[currentMediaIndex].url || displayFiles[currentMediaIndex].url_thumbnail"
-                        :alt="displayFiles[currentMediaIndex].name"
-                        class="w-full h-full object-contain"
-                        @error="(e) => handleImageError(e, displayFiles[currentMediaIndex])"
-                      />
-                      
-                      <!-- Expand Icon Overlay -->
-                      <div id="bug-detail-media-expand" class="absolute top-2 right-2 bg-black/50 hover:bg-black/70 rounded-lg p-2 transition-colors">
-                        <i id="bug-detail-media-expand-icon" class="fas fa-expand text-white text-sm"></i>
-                      </div>
-                    </div>
-                    
-                    <!-- Navigation Arrows -->
-                    <button 
-                      v-if="displayFiles.length > 1"
-                      id="bug-detail-media-prev"
-                      @click.stop="previousMedia"
-                      class="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-colors"
-                    >
-                      <i id="bug-detail-media-prev-icon" class="fas fa-chevron-left"></i>
-                    </button>
-                    <button 
-                      v-if="displayFiles.length > 1"
-                      id="bug-detail-media-next"
-                      @click.stop="nextMedia"
-                      class="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-colors"
-                    >
-                      <i id="bug-detail-media-next-icon" class="fas fa-chevron-right"></i>
-                    </button>
-                    
-                    <!-- Media Counter -->
-                    <div id="bug-detail-media-counter" class="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/50 text-white text-xs px-3 py-1 rounded-full">
-                      {{ currentMediaIndex + 1 }} / {{ displayFiles.length }}
-                    </div>
-                  </div>
-                  
-                  <!-- File Name - Level 4 (Darkest) -->
-                  <div id="bug-detail-media-filename-container" class="px-3 py-2 bg-gray-200 dark:bg-gray-600 rounded">
-                    <p id="bug-detail-media-filename" class="text-xs text-gray-900 dark:text-gray-100 truncate" :title="displayFiles[currentMediaIndex].name">
-                      {{ displayFiles[currentMediaIndex].name }}
-                    </p>
-                  </div>
-                  
-                  <!-- Thumbnail Strip - Level 4 (Darkest) -->
-                  <div v-if="displayFiles.length > 1" id="bug-detail-media-thumbnails" class="flex gap-2 overflow-x-auto pb-2 p-2 bg-gray-200 dark:bg-gray-600 rounded">
-                    <button
-                      v-for="(file, index) in displayFiles"
-                      :key="index"
-                      :id="`bug-detail-media-thumb-${index}`"
-                      @click="currentMediaIndex = index"
-                      class="flex-shrink-0 w-20 h-20 rounded border-2 overflow-hidden transition-colors"
-                      :class="[
-                        currentMediaIndex === index
-                          ? 'border-[#5bbcaa]'
-                          : 'border-gray-400 dark:border-gray-500 hover:border-[#5bbcaa]/50'
-                      ]"
-                    >
-                      <img 
-                        v-if="isImage(file.name)"
-                        :id="`bug-detail-media-thumb-img-${index}`"
-                        :src="file.url_thumbnail || file.public_url || file.url"
-                        :alt="file.name"
-                        class="w-full h-full object-cover"
-                      />
-                      <div v-else-if="isVideo(file.name)" :id="`bug-detail-media-thumb-video-${index}`" class="w-full h-full bg-gray-800 flex items-center justify-center">
-                        <i :id="`bug-detail-media-thumb-video-icon-${index}`" class="fas fa-play text-white text-lg"></i>
-                      </div>
-                    </button>
-                  </div>
-                </div>
-                
-                <p v-else id="bug-detail-media-empty" class="text-sm text-gray-500 dark:text-gray-400 italic p-4 bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-300 dark:border-gray-600">
-                  No pictures or videos attached
-                </p>
-              </div>
-
-              <!-- Comments / Updates - Level 3 -->
-              <div id="bug-detail-updates-container" class="mt-6">
-                <label id="bug-detail-updates-label" class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-2 block">
-                  Comments / Updates
-                  <span v-if="totalCommentsCount > 0" class="text-sm font-normal text-gray-500 dark:text-gray-400 ml-1">
-                    ({{ totalCommentsCount }})
-                  </span>
-                </label>
-
-                <div v-if="selectedBug.updates.length > 0" id="bug-detail-updates-content" class="space-y-3">
-                  <div
-                    v-for="update in selectedBug.updates"
-                    :key="update.id"
-                    :id="`bug-detail-update-${update.id}`"
-                    class="p-4 bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-300 dark:border-gray-600"
+              <!-- Right Column: Media + Comments (40%) -->
+              <div id="bug-detail-right-column" class="col-span-2 space-y-4 overflow-y-auto">
+                <!-- Media Section - Collapsible -->
+                <div id="bug-detail-media-container" class="rounded-lg border border-gray-200 dark:border-gray-700 border-l-[3px] border-l-indigo-500">
+                  <button
+                    @click="mediaExpanded = !mediaExpanded"
+                    class="flex items-center gap-2 w-full px-4 py-3 text-left bg-gray-50 dark:bg-gray-750 rounded-t-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    :class="[!mediaExpanded ? 'rounded-b-lg' : '']"
                   >
-                    <!-- Update Header -->
-                    <div :id="`bug-detail-update-header-${update.id}`" class="flex items-center justify-between mb-2">
-                      <span :id="`bug-detail-update-author-${update.id}`" class="text-sm font-medium text-gray-900 dark:text-gray-100">
-                        {{ getCreatorName(update.creator_id) }}
-                      </span>
-                      <span :id="`bug-detail-update-date-${update.id}`" class="text-xs text-gray-500 dark:text-gray-400">
-                        {{ formatUpdateTimestamp(update.created_at) }}
-                      </span>
-                    </div>
-                    <!-- Update Body -->
-                    <p :id="`bug-detail-update-text-${update.id}`" class="text-sm text-gray-900 dark:text-gray-100 whitespace-pre-wrap leading-relaxed">
-                      {{ update.text_body }}
-                    </p>
+                    <i class="fas fa-photo-video text-sm text-indigo-500 dark:text-indigo-400"></i>
+                    <span class="text-base font-semibold text-gray-900 dark:text-gray-100">Pictures / Videos</span>
+                    <span v-if="displayFiles.length > 0" class="text-sm font-normal text-gray-500 dark:text-gray-400">({{ displayFiles.length }})</span>
+                    <i :class="['fas fa-chevron-down text-xs text-gray-400 ml-auto transition-transform duration-200', mediaExpanded ? '' : '-rotate-90']"></i>
+                  </button>
 
-                    <!-- Replies -->
-                    <div v-if="update.replies && update.replies.length > 0" class="mt-3 ml-4 space-y-2 border-l-2 border-gray-300 dark:border-gray-500 pl-4">
-                      <div
-                        v-for="reply in update.replies"
-                        :key="reply.id"
-                        :id="`bug-detail-reply-${reply.id}`"
-                        class="p-3 bg-gray-200 dark:bg-gray-600 rounded-lg"
-                      >
-                        <div class="flex items-center justify-between mb-1">
-                          <span class="text-xs font-medium text-gray-900 dark:text-gray-100">
-                            {{ getCreatorName(reply.creator_id) }}
-                          </span>
-                          <span class="text-xs text-gray-500 dark:text-gray-400">
-                            {{ formatUpdateTimestamp(reply.created_at) }}
-                          </span>
+                  <Transition
+                    enter-active-class="transition-all duration-200 ease-out"
+                    enter-from-class="max-h-0 opacity-0"
+                    enter-to-class="max-h-[2000px] opacity-100"
+                    leave-active-class="transition-all duration-200 ease-in"
+                    leave-from-class="max-h-[2000px] opacity-100"
+                    leave-to-class="max-h-0 opacity-0"
+                  >
+                    <div v-if="mediaExpanded" class="overflow-hidden">
+                      <div v-if="displayFiles.length > 0" id="bug-detail-media-content" class="p-4 space-y-4">
+                        <!-- Media Carousel -->
+                        <div id="bug-detail-media-carousel" class="relative bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden shadow-sm">
+                          <div id="bug-detail-media-display" class="relative aspect-video bg-black flex items-center justify-center cursor-pointer" @click="openMediaModal">
+                            <video
+                              v-if="isVideo(displayFiles[currentMediaIndex].name)"
+                              id="bug-detail-media-video"
+                              controls
+                              class="w-full h-full object-contain"
+                              :src="displayFiles[currentMediaIndex].public_url || displayFiles[currentMediaIndex].url"
+                            >
+                              Your browser does not support the video tag.
+                            </video>
+                            <img
+                              v-else-if="isImage(displayFiles[currentMediaIndex].name)"
+                              id="bug-detail-media-image"
+                              :src="displayFiles[currentMediaIndex].public_url || displayFiles[currentMediaIndex].url || displayFiles[currentMediaIndex].url_thumbnail"
+                              :alt="displayFiles[currentMediaIndex].name"
+                              class="w-full h-full object-contain"
+                              @error="(e) => handleImageError(e, displayFiles[currentMediaIndex])"
+                            />
+                            <div id="bug-detail-media-expand" class="absolute top-2 right-2 bg-black/50 hover:bg-black/70 rounded-lg p-2 transition-colors">
+                              <i id="bug-detail-media-expand-icon" class="fas fa-expand text-white text-sm"></i>
+                            </div>
+                          </div>
+                          <button
+                            v-if="displayFiles.length > 1"
+                            id="bug-detail-media-prev"
+                            @click.stop="previousMedia"
+                            class="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-colors"
+                          >
+                            <i id="bug-detail-media-prev-icon" class="fas fa-chevron-left"></i>
+                          </button>
+                          <button
+                            v-if="displayFiles.length > 1"
+                            id="bug-detail-media-next"
+                            @click.stop="nextMedia"
+                            class="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-colors"
+                          >
+                            <i id="bug-detail-media-next-icon" class="fas fa-chevron-right"></i>
+                          </button>
+                          <div id="bug-detail-media-counter" class="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/50 text-white text-xs px-3 py-1 rounded-full">
+                            {{ currentMediaIndex + 1 }} / {{ displayFiles.length }}
+                          </div>
                         </div>
-                        <p class="text-xs text-gray-900 dark:text-gray-100 whitespace-pre-wrap leading-relaxed">
-                          {{ reply.text_body }}
+
+                        <div id="bug-detail-media-filename-container" class="px-3 py-2 bg-gray-200 dark:bg-gray-600 rounded">
+                          <p id="bug-detail-media-filename" class="text-xs text-gray-900 dark:text-gray-100 truncate" :title="displayFiles[currentMediaIndex].name">
+                            {{ displayFiles[currentMediaIndex].name }}
+                          </p>
+                        </div>
+
+                        <div v-if="displayFiles.length > 1" id="bug-detail-media-thumbnails" class="flex gap-2 overflow-x-auto pb-2 p-2 bg-gray-200 dark:bg-gray-600 rounded">
+                          <button
+                            v-for="(file, index) in displayFiles"
+                            :key="index"
+                            :id="`bug-detail-media-thumb-${index}`"
+                            @click="currentMediaIndex = index"
+                            class="flex-shrink-0 w-20 h-20 rounded border-2 overflow-hidden transition-colors"
+                            :class="[
+                              currentMediaIndex === index
+                                ? 'border-[#5bbcaa]'
+                                : 'border-gray-400 dark:border-gray-500 hover:border-[#5bbcaa]/50'
+                            ]"
+                          >
+                            <img
+                              v-if="isImage(file.name)"
+                              :id="`bug-detail-media-thumb-img-${index}`"
+                              :src="file.url_thumbnail || file.public_url || file.url"
+                              :alt="file.name"
+                              class="w-full h-full object-cover"
+                            />
+                            <div v-else-if="isVideo(file.name)" :id="`bug-detail-media-thumb-video-${index}`" class="w-full h-full bg-gray-800 flex items-center justify-center">
+                              <i :id="`bug-detail-media-thumb-video-icon-${index}`" class="fas fa-play text-white text-lg"></i>
+                            </div>
+                          </button>
+                        </div>
+                      </div>
+
+                      <div v-else class="p-4">
+                        <p id="bug-detail-media-empty" class="text-sm text-gray-500 dark:text-gray-400 italic p-4 bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-300 dark:border-gray-600">
+                          No pictures or videos attached
                         </p>
                       </div>
                     </div>
-                  </div>
+                  </Transition>
                 </div>
 
-                <div v-else id="bug-detail-updates-empty" class="p-4 bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-300 dark:border-gray-600">
-                  <p class="text-base text-gray-500 dark:text-gray-400 italic">No comments or updates</p>
+                <!-- Comments / Updates Section - Collapsible -->
+                <div id="bug-detail-updates-container" class="rounded-lg border border-gray-200 dark:border-gray-700 border-l-[3px] border-l-teal-500">
+                  <button
+                    @click="commentsExpanded = !commentsExpanded"
+                    class="flex items-center gap-2 w-full px-4 py-3 text-left bg-gray-50 dark:bg-gray-750 rounded-t-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    :class="[!commentsExpanded ? 'rounded-b-lg' : '']"
+                  >
+                    <i class="fas fa-comments text-sm text-teal-500 dark:text-teal-400"></i>
+                    <span class="text-base font-semibold text-gray-900 dark:text-gray-100">Comments / Updates</span>
+                    <span v-if="totalCommentsCount > 0" class="text-sm font-normal text-gray-500 dark:text-gray-400">({{ totalCommentsCount }})</span>
+                    <i :class="['fas fa-chevron-down text-xs text-gray-400 ml-auto transition-transform duration-200', commentsExpanded ? '' : '-rotate-90']"></i>
+                  </button>
+
+                  <Transition
+                    enter-active-class="transition-all duration-200 ease-out"
+                    enter-from-class="max-h-0 opacity-0"
+                    enter-to-class="max-h-[2000px] opacity-100"
+                    leave-active-class="transition-all duration-200 ease-in"
+                    leave-from-class="max-h-[2000px] opacity-100"
+                    leave-to-class="max-h-0 opacity-0"
+                  >
+                    <div v-if="commentsExpanded" class="overflow-hidden">
+                      <div v-if="selectedBug.updates.length > 0" id="bug-detail-updates-content" class="p-4 space-y-3">
+                        <div
+                          v-for="update in selectedBug.updates"
+                          :key="update.id"
+                          :id="`bug-detail-update-${update.id}`"
+                          class="p-4 bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-300 dark:border-gray-600 border-l-[3px]"
+                          :style="{ borderLeftColor: getUserColor(update.creator_id) }"
+                        >
+                          <div :id="`bug-detail-update-header-${update.id}`" class="flex items-center justify-between mb-2">
+                            <span :id="`bug-detail-update-author-${update.id}`" class="text-sm font-semibold" :style="{ color: getUserColor(update.creator_id) }">
+                              {{ getCreatorName(update.creator_id) }}
+                            </span>
+                            <span :id="`bug-detail-update-date-${update.id}`" class="text-xs text-gray-500 dark:text-gray-400">
+                              {{ formatUpdateTimestamp(update.created_at) }}
+                            </span>
+                          </div>
+                          <p :id="`bug-detail-update-text-${update.id}`" class="text-sm text-gray-900 dark:text-gray-100 whitespace-pre-wrap leading-relaxed">
+                            {{ update.text_body }}
+                          </p>
+
+                          <div v-if="update.replies && update.replies.length > 0" class="mt-3 ml-4 space-y-2 border-l-2 border-gray-300 dark:border-gray-500 pl-4">
+                            <div
+                              v-for="reply in update.replies"
+                              :key="reply.id"
+                              :id="`bug-detail-reply-${reply.id}`"
+                              class="p-3 bg-gray-200 dark:bg-gray-600 rounded-lg border-l-[3px]"
+                              :style="{ borderLeftColor: getUserColor(reply.creator_id) }"
+                            >
+                              <div class="flex items-center justify-between mb-1">
+                                <span class="text-xs font-semibold" :style="{ color: getUserColor(reply.creator_id) }">
+                                  {{ getCreatorName(reply.creator_id) }}
+                                </span>
+                                <span class="text-xs text-gray-500 dark:text-gray-400">
+                                  {{ formatUpdateTimestamp(reply.created_at) }}
+                                </span>
+                              </div>
+                              <p class="text-xs text-gray-900 dark:text-gray-100 whitespace-pre-wrap leading-relaxed">
+                                {{ reply.text_body }}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div v-else class="p-4">
+                        <div id="bug-detail-updates-empty" class="p-4 bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-300 dark:border-gray-600">
+                          <p class="text-base text-gray-500 dark:text-gray-400 italic">No comments or updates</p>
+                        </div>
+                      </div>
+                    </div>
+                  </Transition>
                 </div>
               </div>
             </div>
@@ -688,6 +717,29 @@ const showMediaModal = ref(false)
 const showFilters = ref(false)
 const priorityFilter = ref('all')
 const sortOption = ref<'priority-high' | 'priority-low' | 'date-latest' | 'date-earliest'>('priority-high')
+const mediaExpanded = ref(true)
+const commentsExpanded = ref(true)
+
+// User color mapping for comments - each unique user gets a consistent color
+const userColors = [
+  '#3b82f6', // blue
+  '#8b5cf6', // violet
+  '#10b981', // emerald
+  '#ec4899', // pink
+  '#f59e0b', // amber
+  '#06b6d4', // cyan
+  '#f97316', // orange
+  '#6366f1', // indigo
+]
+const userColorMap = new Map<string, string>()
+const getUserColor = (creatorId: string): string => {
+  if (!creatorId) return '#6b7280'
+  if (userColorMap.has(creatorId)) return userColorMap.get(creatorId)!
+  const index = userColorMap.size % userColors.length
+  const color = userColors[index]
+  userColorMap.set(creatorId, color)
+  return color
+}
 
 interface Asset {
   id: string
@@ -955,6 +1007,10 @@ const getMondayUrl = (itemId: string, boardId: string): string => {
 const selectBug = (bug: Bug) => {
   selectedBug.value = bug
   currentMediaIndex.value = 0 // Reset to first media when selecting a new bug
+  // Smart defaults for collapsible sections
+  const bugAssets = bug.assets?.length > 0 || bug.files?.length > 0
+  mediaExpanded.value = bugAssets
+  commentsExpanded.value = bug.updates?.length > 0
   scrollToSelectedBug(bug.id)
 }
 
