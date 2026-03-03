@@ -277,10 +277,11 @@
                 <i :id="`bug-chevron-${bug.id}`" class="fas fa-chevron-right text-gray-400 text-sm flex-shrink-0"></i>
               </div>
               
-              <!-- Bottom Right: Attachment Icons -->
-              <div v-if="hasAttachments(bug)" class="absolute bottom-2 right-4 flex items-center gap-1.5 h-5">
+              <!-- Bottom Right: Attachment & Comment Icons -->
+              <div v-if="hasAttachments(bug) || bug.updates.length > 0" class="absolute bottom-2 right-4 flex items-center gap-1.5 h-5">
                 <i v-if="hasImages(bug)" class="fas fa-image text-blue-500 text-sm" title="Has images"></i>
                 <i v-if="hasVideos(bug)" class="fas fa-video text-purple-500 text-sm" title="Has videos"></i>
+                <i v-if="bug.updates.length > 0" class="fas fa-comment text-gray-400 text-sm" :title="`${bug.updates.length + bug.updates.reduce((s, u) => s + (u.replies?.length || 0), 0)} comment(s)`"></i>
               </div>
             </button>
           </div>
@@ -520,6 +521,65 @@
                   No pictures or videos attached
                 </p>
               </div>
+
+              <!-- Comments / Updates - Level 3 -->
+              <div id="bug-detail-updates-container" class="mt-6">
+                <label id="bug-detail-updates-label" class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-2 block">
+                  Comments / Updates
+                  <span v-if="totalCommentsCount > 0" class="text-sm font-normal text-gray-500 dark:text-gray-400 ml-1">
+                    ({{ totalCommentsCount }})
+                  </span>
+                </label>
+
+                <div v-if="selectedBug.updates.length > 0" id="bug-detail-updates-content" class="space-y-3">
+                  <div
+                    v-for="update in selectedBug.updates"
+                    :key="update.id"
+                    :id="`bug-detail-update-${update.id}`"
+                    class="p-4 bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-300 dark:border-gray-600"
+                  >
+                    <!-- Update Header -->
+                    <div :id="`bug-detail-update-header-${update.id}`" class="flex items-center justify-between mb-2">
+                      <span :id="`bug-detail-update-author-${update.id}`" class="text-sm font-medium text-gray-900 dark:text-gray-100">
+                        {{ getCreatorName(update.creator_id) }}
+                      </span>
+                      <span :id="`bug-detail-update-date-${update.id}`" class="text-xs text-gray-500 dark:text-gray-400">
+                        {{ formatUpdateTimestamp(update.created_at) }}
+                      </span>
+                    </div>
+                    <!-- Update Body -->
+                    <p :id="`bug-detail-update-text-${update.id}`" class="text-sm text-gray-900 dark:text-gray-100 whitespace-pre-wrap leading-relaxed">
+                      {{ update.text_body }}
+                    </p>
+
+                    <!-- Replies -->
+                    <div v-if="update.replies && update.replies.length > 0" class="mt-3 ml-4 space-y-2 border-l-2 border-gray-300 dark:border-gray-500 pl-4">
+                      <div
+                        v-for="reply in update.replies"
+                        :key="reply.id"
+                        :id="`bug-detail-reply-${reply.id}`"
+                        class="p-3 bg-gray-200 dark:bg-gray-600 rounded-lg"
+                      >
+                        <div class="flex items-center justify-between mb-1">
+                          <span class="text-xs font-medium text-gray-900 dark:text-gray-100">
+                            {{ getCreatorName(reply.creator_id) }}
+                          </span>
+                          <span class="text-xs text-gray-500 dark:text-gray-400">
+                            {{ formatUpdateTimestamp(reply.created_at) }}
+                          </span>
+                        </div>
+                        <p class="text-xs text-gray-900 dark:text-gray-100 whitespace-pre-wrap leading-relaxed">
+                          {{ reply.text_body }}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div v-else id="bug-detail-updates-empty" class="p-4 bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-300 dark:border-gray-600">
+                  <p class="text-base text-gray-500 dark:text-gray-400 italic">No comments or updates</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -646,6 +706,25 @@ interface StatusChangeHistory {
   changed_at: string
 }
 
+interface Reply {
+  id: string
+  text_body: string
+  body: string
+  creator_id: string
+  created_at: string
+  updated_at: string
+}
+
+interface Update {
+  id: string
+  text_body: string
+  body: string
+  creator_id: string
+  created_at: string
+  updated_at: string
+  replies?: Reply[]
+}
+
 interface Bug {
   id: string
   name: string
@@ -668,6 +747,7 @@ interface Bug {
   files: any[]
   assets: Asset[]
   statusChangeHistory?: StatusChangeHistory[]
+  updates: Update[]
 }
 
 const filteredBugs = computed<Bug[]>(() => {
@@ -753,7 +833,8 @@ const filteredBugs = computed<Bug[]>(() => {
         createdDate,
         files,
         assets,
-        statusChangeHistory: item.statusChangeHistory || []
+        statusChangeHistory: item.statusChangeHistory || [],
+        updates: item.updates || []
       }
     })
 })
@@ -815,6 +896,13 @@ const currentStatusBugs = computed(() => {
   })
   
   return sortedBugs
+})
+
+const totalCommentsCount = computed(() => {
+  if (!selectedBug.value) return 0
+  const updates = selectedBug.value.updates
+  const repliesCount = updates.reduce((sum, u) => sum + (u.replies?.length || 0), 0)
+  return updates.length + repliesCount
 })
 
 const displayFiles = computed(() => {
@@ -887,6 +975,23 @@ const formatActivityTimestamp = (timestamp: string): string => {
     const milliseconds = Math.round(parseInt(timestamp) / 10000)
     const date = new Date(milliseconds)
     
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  } catch (e) {
+    return 'Unknown'
+  }
+}
+
+const formatUpdateTimestamp = (isoDate: string): string => {
+  if (!isoDate) return 'Unknown'
+
+  try {
+    const date = new Date(isoDate)
     return date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',

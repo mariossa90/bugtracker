@@ -75,3 +75,4 @@ You'll get a URL like: `https://bugtracker-xyz123.vercel.app`
 
 **That's it! Your app is ready to deploy to Vercel!** 🎊
 
+

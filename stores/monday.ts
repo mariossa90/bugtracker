@@ -59,6 +59,25 @@ interface Asset {
   file_size: number;
 }
 
+interface Reply {
+  id: string;
+  text_body: string;
+  body: string;
+  creator_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface Update {
+  id: string;
+  text_body: string;
+  body: string;
+  creator_id: string;
+  created_at: string;
+  updated_at: string;
+  replies?: Reply[];
+}
+
 interface SubItem {
   id: string;
   name: string;
@@ -71,6 +90,7 @@ interface Item {
   column_values: ColumnValue[];
   assets?: Asset[];
   subitems: SubItem[];
+  updates?: Update[];
 }
 
 interface ItemsPage {
@@ -87,6 +107,7 @@ interface Task {
   assets?: Asset[]
   subitems: SubItem[]
   statusChangeHistory?: StatusChangeHistory[]
+  updates?: Update[]
   // Add other relevant task properties based on your Monday.com schema
 }
 
@@ -213,6 +234,22 @@ export const useMondayStore = defineStore('monday', {
                         text
                         value
                         type
+                      }
+                    }
+                    updates(limit: 100) {
+                      id
+                      text_body
+                      body
+                      creator_id
+                      created_at
+                      updated_at
+                      replies {
+                        id
+                        text_body
+                        body
+                        creator_id
+                        created_at
+                        updated_at
                       }
                     }
                   }
@@ -427,6 +464,7 @@ export const useMondayStore = defineStore('monday', {
                   assets: item.assets,
                   subitems: item.subitems,
                   statusChangeHistory,
+                  updates: item.updates || [],
                 }
               })
             }]
