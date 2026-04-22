@@ -100,7 +100,7 @@ import { ref } from 'vue'
 import { useSettingsStore } from '~/stores/settings'
 
 const PREDEFINED_BOARDS = [
-  { id: '2154669988', name: 'Bugs Queue' }
+  { id: '1340048713', name: 'Task and Ticket Board' }
 ] as const
 
 const settingsStore = useSettingsStore()

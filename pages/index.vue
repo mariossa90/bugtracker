@@ -52,7 +52,7 @@
               No boards configured
             </p>
             <p class="text-gray-600 dark:text-gray-400 mb-4">
-              Please configure your Monday.com board to start viewing bugs. Add board ID: 2154669988
+              Please configure your Monday.com board to start viewing bugs. Add board ID: 1340048713
             </p>
             <button 
               @click="openSettings('boards')" 

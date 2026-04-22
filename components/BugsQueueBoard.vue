@@ -172,6 +172,53 @@
           </div>
         </Transition>
         
+        <!-- Category Tabs - Level 2 -->
+        <div id="category-tabs-container" class="flex-none p-4 bg-gray-50 dark:bg-gray-750 border-b border-gray-200 dark:border-gray-700">
+          <div id="category-tabs-grid" class="grid grid-cols-3 gap-2">
+            <button
+              id="tab-category-bug"
+              @click="activeCategory = 'Bug'"
+              class="px-3 py-2.5 text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-1.5"
+              :class="[
+                activeCategory === 'Bug'
+                  ? 'bg-red-200 dark:bg-red-900/40 text-red-900 dark:text-red-100'
+                  : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+              ]"
+            >
+              <i class="fas fa-bug text-xs text-red-600 dark:text-red-400"></i>
+              <span class="truncate">Bugs</span>
+            </button>
+
+            <button
+              id="tab-category-feature"
+              @click="activeCategory = 'Feature'"
+              class="px-3 py-2.5 text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-1.5"
+              :class="[
+                activeCategory === 'Feature'
+                  ? 'bg-blue-200 dark:bg-blue-900/40 text-blue-900 dark:text-blue-100'
+                  : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+              ]"
+            >
+              <i class="fas fa-lightbulb text-xs text-blue-600 dark:text-blue-400"></i>
+              <span class="truncate">Features</span>
+            </button>
+
+            <button
+              id="tab-category-other"
+              @click="activeCategory = 'Other'"
+              class="px-3 py-2.5 text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-1.5"
+              :class="[
+                activeCategory === 'Other'
+                  ? 'bg-gray-300 dark:bg-gray-600 text-gray-900 dark:text-gray-100'
+                  : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+              ]"
+            >
+              <i class="fas fa-list text-xs text-gray-500 dark:text-gray-400"></i>
+              <span class="truncate">Other</span>
+            </button>
+          </div>
+        </div>
+
         <!-- Status Tabs - Level 2 -->
         <div id="status-tabs-container" class="flex-none p-4 bg-gray-50 dark:bg-gray-750 border-b border-gray-200 dark:border-gray-700">
           <div id="status-tabs-grid" class="grid grid-cols-2 gap-2">
@@ -317,7 +364,14 @@
                 </div>
                 <div id="bug-detail-header-info-row" class="flex items-center gap-4">
                   <div id="bug-detail-badges" class="flex items-center gap-2.5 flex-wrap">
-                    <span 
+                    <span
+                      id="bug-detail-category-badge"
+                      class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium"
+                      :class="getCategoryClass(selectedBug.category)"
+                    >
+                      {{ selectedBug.category }}
+                    </span>
+                    <span
                       v-if="selectedBug.priority"
                       id="bug-detail-priority-badge"
                       class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium"
@@ -349,7 +403,17 @@
                       <span id="bug-detail-created-label" class="text-gray-500 dark:text-gray-400">Reported by {{ getCreatorName(selectedBug.creatorId) }} on:</span> {{ selectedBug.createdDate || 'Unknown' }}
                     </p>
                   </div>
-                  
+
+                  <template v-if="selectedBug.dev">
+                    <div id="bug-detail-separator-assigned" class="w-px h-8 bg-gray-300 dark:bg-gray-600 flex-shrink-0"></div>
+
+                    <div id="bug-detail-header-assignee" class="flex-shrink-0">
+                      <p id="bug-detail-assigned-to" class="text-sm text-gray-900 dark:text-gray-100">
+                        <span class="text-gray-500 dark:text-gray-400">Assigned to:</span> {{ selectedBug.dev }}
+                      </p>
+                    </div>
+                  </template>
+
                   <!-- Status Change Info (for Resolved, In Development, and Cancelled) -->
                   <template v-if="getCurrentStatusChangeInfo && selectedBug.statusBug !== 'Not Started'">
                     <div id="bug-detail-separator-2" class="w-px h-8 bg-gray-300 dark:bg-gray-600 flex-shrink-0"></div>
@@ -376,9 +440,20 @@
                 </div>
               </div>
               
-              <a 
+              <a
+                v-if="selectedTeamdeskUrl"
+                id="bug-detail-teamdesk-link"
+                :href="selectedTeamdeskUrl"
+                target="_blank"
+                class="flex-shrink-0 px-4 py-2 text-sm font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-300 dark:hover:text-indigo-200 border border-indigo-500 hover:bg-indigo-500/5 rounded-lg transition-colors bg-white dark:bg-gray-800"
+              >
+                <i class="fas fa-external-link-alt mr-2"></i>
+                Open on Teamdesk
+              </a>
+
+              <a
                 id="bug-detail-monday-link"
-                :href="getMondayUrl(selectedBug.id, selectedBug.boardId)" 
+                :href="getMondayUrl(selectedBug.id, selectedBug.boardId)"
                 target="_blank"
                 class="flex-shrink-0 px-4 py-2 text-sm font-medium text-[#5bbcaa] hover:text-[#4ca899] border border-[#5bbcaa] hover:bg-[#5bbcaa]/5 rounded-lg transition-colors bg-white dark:bg-gray-800"
               >
@@ -402,21 +477,11 @@
                   </div>
                 </div>
 
-                <!-- Reproduce Steps - Level 3 -->
-                <div id="bug-detail-reproduce-container" class="border-l-[3px] border-amber-500 pl-4">
-                  <label id="bug-detail-reproduce-label" class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-2 block"><i class="fas fa-list-ol text-sm mr-2 text-amber-500 dark:text-amber-400"></i>Steps to Reproduce</label>
-                  <div id="bug-detail-reproduce-content" class="p-4 bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-300 dark:border-gray-600">
-                    <p v-if="selectedBug.reproduceSteps" id="bug-detail-reproduce-text" class="text-base text-gray-900 dark:text-gray-100 whitespace-pre-wrap leading-relaxed">{{ selectedBug.reproduceSteps }}</p>
-                    <p v-else id="bug-detail-reproduce-empty" class="text-base text-gray-500 dark:text-gray-400 italic">No reproduction steps provided</p>
-                  </div>
-                </div>
-
-                <!-- Outcomes - Level 3 -->
-                <div id="bug-detail-outcomes-container" class="border-l-[3px] border-violet-500 pl-4">
-                  <label id="bug-detail-outcomes-label" class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-2 block"><i class="fas fa-exchange-alt text-sm mr-2 text-violet-500 dark:text-violet-400"></i>Expected vs Actual Outcomes</label>
-                  <div id="bug-detail-outcomes-content" class="p-4 bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-300 dark:border-gray-600">
-                    <p v-if="selectedBug.outcomes" id="bug-detail-outcomes-text" class="text-base text-gray-900 dark:text-gray-100 whitespace-pre-wrap leading-relaxed">{{ selectedBug.outcomes }}</p>
-                    <p v-else id="bug-detail-outcomes-empty" class="text-base text-gray-500 dark:text-gray-400 italic">No outcomes information provided</p>
+                <!-- Teamdesk Problem Description - Level 3 -->
+                <div v-if="selectedBug.teamdeskDescription" id="bug-detail-teamdesk-description-container" class="border-l-[3px] border-indigo-500 pl-4">
+                  <label id="bug-detail-teamdesk-description-label" class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-2 block"><i class="fas fa-database text-sm mr-2 text-indigo-500 dark:text-indigo-400"></i>Teamdesk Problem Description</label>
+                  <div id="bug-detail-teamdesk-description-content" class="p-4 bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-300 dark:border-gray-600">
+                    <p id="bug-detail-teamdesk-description-text" class="text-base text-gray-900 dark:text-gray-100 whitespace-pre-wrap leading-relaxed">{{ selectedBug.teamdeskDescription }}</p>
                   </div>
                 </div>
 
@@ -712,6 +777,7 @@ const userStore = useUserStore()
 const searchQuery = ref('')
 const selectedBug = ref<Bug | null>(null)
 const activeStatus = ref<'notStarted' | 'inDevelopment' | 'resolved' | 'cancelled'>('notStarted')
+const activeCategory = ref<'Bug' | 'Feature' | 'Other'>('Bug')
 const currentMediaIndex = ref(0)
 const showMediaModal = ref(false)
 const showFilters = ref(false)
@@ -742,13 +808,10 @@ const getUserColor = (creatorId: string): string => {
 }
 
 interface Asset {
-  id: string
   name: string
   url: string
   public_url: string
   url_thumbnail?: string
-  file_extension: string
-  file_size: number
 }
 
 interface StatusChangeHistory {
@@ -761,19 +824,15 @@ interface StatusChangeHistory {
 interface Reply {
   id: string
   text_body: string
-  body: string
   creator_id: string
   created_at: string
-  updated_at: string
 }
 
 interface Update {
   id: string
   text_body: string
-  body: string
   creator_id: string
   created_at: string
-  updated_at: string
   replies?: Reply[]
 }
 
@@ -783,16 +842,18 @@ interface Bug {
   boardId: string
   statusBug: string
   statusBugColor: string
+  rawStatus: string
+  category: 'Bug' | 'Feature' | 'Other'
   priority: string
   priorityColor: string
   topic: string
   topicColor: string
   version: string
   dev: string
+  devId: string
   statusTicket: string
   description: string
-  reproduceSteps: string
-  outcomes: string
+  teamdeskDescription: string
   creationLog: string
   creatorId: string
   createdDate: string
@@ -802,49 +863,113 @@ interface Bug {
   updates: Update[]
 }
 
+// Raw "status" label → one of the 4 UI tab buckets. `null` means "hide from board".
+const STATUS_BUCKETS: Record<string, 'Not Started' | 'In Development' | 'Resolved' | 'Cancelled' | null> = {
+  'Backlog': 'Not Started',
+  'Waiting': 'Not Started',
+  'Ticket Blocked': 'Not Started',
+  'Problem': 'Not Started',
+  'Dev in Progress': 'In Development',
+  'Dev finished': 'In Development',
+  'Review': 'In Development',
+  'Interrupted': 'In Development',
+  'Done': 'Resolved',
+  'Canceled': 'Cancelled',
+  'Continuous Task': null,
+}
+
+// Priority symbols on the new board mapped to the existing word-based labels.
+// Emoji/variation-selector differences (e.g. ⚠ vs ⚠️ vs ⚠️️) make strict string
+// matching fragile, so normalize to ASCII before deciding.
+const normalizePriority = (raw: string): string => {
+  const stripped = raw.replace(/[^\x20-\x7E]/g, '').trim()
+  if (stripped === '+++') return 'Critical'
+  if (stripped === '++') return 'High'
+  if (stripped === '+') return 'Medium'
+  if (stripped === '-') return 'Low'
+  return raw
+}
+
+// The teamdesk auto-generated update contains a "Problem Description:" section
+// that ends where "Contact Person:" begins. Extract just that block so it can
+// be folded into the ticket's Description without the surrounding boilerplate.
+const TEAMDESK_PROBLEM_DESC_RE = /Problem Description:\s*([\s\S]*?)\s*Contact Person:/i
+
+// Task column value → display category. "WABOT Bugfix" and "WABOT Feature Dev" are
+// the signals for Bug/Feature; everything else on a WABOT ticket is a generic Task.
+const deriveCategory = (taskLabel: string): 'Bug' | 'Feature' | 'Other' => {
+  if (taskLabel === 'WABOT Bugfix') return 'Bug'
+  if (taskLabel === 'WABOT Feature Dev') return 'Feature'
+  return 'Other'
+}
+
 const filteredBugs = computed<Bug[]>(() => {
   const query = searchQuery.value.toLowerCase()
-  
+
   return props.items
     .filter(item => {
-      if (!query) return true
-      return item.name.toLowerCase().includes(query)
+      if (query && !item.name.toLowerCase().includes(query)) return false
+      // Only WABOT-project tickets belong on this board.
+      const projectColumn = item.columnValues.find((cv: any) => cv.id === 'color_mktaqj05')
+      return projectColumn?.text === 'WABOT'
     })
     .map(item => {
-      // Find the relevant columns based on the API response structure
-      const statusBugColumn = item.columnValues.find((cv: any) => cv.id === 'color_mkvxkwcm')
-      const priorityColumn = item.columnValues.find((cv: any) => cv.id === 'priority_1')
-      const topicColumn = item.columnValues.find((cv: any) => cv.id === 'single_select7ybqjpr')
-      const versionColumn = item.columnValues.find((cv: any) => cv.id === 'dropdown_mkxp5yr0')
-      const devColumn = item.columnValues.find((cv: any) => cv.id === 'lookup_mkx6ryjh')
-      const statusTicketColumn = item.columnValues.find((cv: any) => cv.id === 'lookup_mkx66kex')
-      const descriptionColumn = item.columnValues.find((cv: any) => cv.id === 'long_text')
-      const reproduceColumn = item.columnValues.find((cv: any) => cv.id === 'long_text8k4x1n6g')
-      const outcomesColumn = item.columnValues.find((cv: any) => cv.id === 'long_textdfmxxlyc')
-      const creationLogColumn = item.columnValues.find((cv: any) => cv.id === 'pulse_log')
-      const filesColumn = item.columnValues.find((cv: any) => cv.id === 'files')
-      
-      // Parse creation log to get creator ID
-      let creatorId = ''
-      let createdDate = ''
-      if (creationLogColumn?.value) {
-        try {
-          const logData = JSON.parse(creationLogColumn.value)
-          if (logData.created_at) {
-            createdDate = new Date(logData.created_at).toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'short',
-              day: 'numeric'
-            })
-          }
-          if (logData.creator_id) {
-            creatorId = logData.creator_id
-          }
-        } catch (e) {
-          createdDate = creationLogColumn.text || ''
+      const statusColumn = item.columnValues.find((cv: any) => cv.id === 'status')
+      const priorityColumn = item.columnValues.find((cv: any) => cv.id === 'priority')
+      const taskColumn = item.columnValues.find((cv: any) => cv.id === 'project8__1')
+      const versionColumn = item.columnValues.find((cv: any) => cv.id === 'release_version')
+      const personColumn = item.columnValues.find((cv: any) => cv.id === 'person')
+      const descriptionColumn = item.columnValues.find((cv: any) => cv.id === 'text__1')
+      const additionalDescriptionColumn = item.columnValues.find((cv: any) => cv.id === 'long_text__1')
+      const createdDateColumn = item.columnValues.find((cv: any) => cv.id === 'datum1')
+
+      // Scan updates (and replies) for the teamdesk "Problem Description:" block.
+      let teamdeskProblemDescription = ''
+      outer: for (const update of (item.updates || [])) {
+        const m = update.text_body?.match(TEAMDESK_PROBLEM_DESC_RE)
+        if (m) { teamdeskProblemDescription = m[1].trim(); break }
+        for (const reply of (update.replies || [])) {
+          const rm = reply.text_body?.match(TEAMDESK_PROBLEM_DESC_RE)
+          if (rm) { teamdeskProblemDescription = rm[1].trim(); break outer }
         }
       }
-      
+      const filesColumn = item.columnValues.find((cv: any) => cv.id === 'files__1')
+
+      const rawStatus = statusColumn?.text || ''
+      const statusBucket = STATUS_BUCKETS[rawStatus]
+
+      const rawPriority = priorityColumn?.text || ''
+      const priority = rawPriority ? normalizePriority(rawPriority) : 'No Priority'
+
+      const category = deriveCategory(taskColumn?.text || '')
+
+      // Extract assigned-person id from the people column value for avatar lookup.
+      let devId = ''
+      if (personColumn?.value) {
+        try {
+          const pv = JSON.parse(personColumn.value)
+          devId = pv?.personsAndTeams?.[0]?.id?.toString() || ''
+        } catch (e) {
+          // ignore malformed value
+        }
+      }
+
+      // Creator info now comes from item.creator (added to GraphQL query), not a log column.
+      const creatorId = item.creator?.id?.toString() || ''
+      let createdDate = ''
+      if (createdDateColumn?.text) {
+        const parsed = new Date(createdDateColumn.text)
+        if (!isNaN(parsed.getTime())) {
+          createdDate = parsed.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+          })
+        } else {
+          createdDate = createdDateColumn.text
+        }
+      }
+
       // Get files directly from GraphQL response (not from value JSON)
       let files: any[] = []
       if (filesColumn && Array.isArray(filesColumn.files)) {
@@ -868,19 +993,23 @@ const filteredBugs = computed<Bug[]>(() => {
         id: item.id,
         name: item.name,
         boardId: item.boardId,
-        statusBug: statusBugColumn?.text || 'No Status',
-        statusBugColor: statusBugColumn?.label_style?.color || '#cbd5e1',
-        priority: priorityColumn?.text || 'No Priority',
+        statusBug: statusBucket || 'Hidden',
+        statusBugColor: statusColumn?.label_style?.color || '#cbd5e1',
+        rawStatus,
+        category,
+        priority,
         priorityColor: priorityColumn?.label_style?.color || '#cbd5e1',
-        topic: topicColumn?.text || '',
-        topicColor: topicColumn?.label_style?.color || '#cbd5e1',
+        topic: '',
+        topicColor: '#cbd5e1',
         version: versionColumn?.text || '',
-        dev: devColumn?.text || '',
-        statusTicket: statusTicketColumn?.text || '',
-        description: descriptionColumn?.text || '',
-        reproduceSteps: reproduceColumn?.text || '',
-        outcomes: outcomesColumn?.text || '',
-        creationLog: creationLogColumn?.text || '',
+        dev: personColumn?.text || '',
+        devId,
+        statusTicket: rawStatus,
+        description: [descriptionColumn?.text, additionalDescriptionColumn?.text]
+          .filter(t => t && t.trim())
+          .join('\n\n'),
+        teamdeskDescription: teamdeskProblemDescription,
+        creationLog: '',
         creatorId,
         createdDate,
         files,
@@ -889,6 +1018,10 @@ const filteredBugs = computed<Bug[]>(() => {
         updates: item.updates || []
       }
     })
+    // Drop items whose raw status maps to `null` (e.g. "Continuous Task").
+    .filter(bug => bug.statusBug !== 'Hidden')
+    // Category toggle — exclusive, one of Bug/Feature/Other always active.
+    .filter(bug => bug.category === activeCategory.value)
 })
 
 const bugsByStatus = computed(() => {
@@ -991,6 +1124,17 @@ const getPriorityStyle = (priority: string, color: string) => {
   }
 }
 
+const getCategoryClass = (category: 'Bug' | 'Feature' | 'Other'): string => {
+  switch (category) {
+    case 'Bug':
+      return 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 border border-red-300 dark:border-red-700'
+    case 'Feature':
+      return 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-700'
+    default:
+      return 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600'
+  }
+}
+
 const getTopicStyle = (topic: string, color: string) => {
   return {
     backgroundColor: `${color}20`,
@@ -1003,6 +1147,24 @@ const getTopicStyle = (topic: string, color: string) => {
 const getMondayUrl = (itemId: string, boardId: string): string => {
   return `https://woojin-world.monday.com/boards/${boardId}/pulses/${itemId}`
 }
+
+// Scan the selected bug's updates (and replies) for the first teamdesk.net link.
+// Our machine database posts an auto-generated update containing a URL of the form
+// https://eu.teamdesk.net/secure/db/<db>/preview.aspx?t=<n>&id=<n>. Tickets without
+// such an update get no button.
+const TEAMDESK_URL_RE = /https:\/\/eu\.teamdesk\.net\/secure\/db\/[^\s<>"')\]]+/
+const selectedTeamdeskUrl = computed<string | null>(() => {
+  if (!selectedBug.value) return null
+  for (const update of selectedBug.value.updates) {
+    const match = update.text_body?.match(TEAMDESK_URL_RE)
+    if (match) return match[0]
+    for (const reply of update.replies || []) {
+      const rMatch = reply.text_body?.match(TEAMDESK_URL_RE)
+      if (rMatch) return rMatch[0]
+    }
+  }
+  return null
+})
 
 const selectBug = (bug: Bug) => {
   selectedBug.value = bug
@@ -1064,30 +1226,28 @@ const getCurrentStatusChangeInfo = computed(() => {
   if (!selectedBug.value || !selectedBug.value.statusChangeHistory || selectedBug.value.statusChangeHistory.length === 0) {
     return null
   }
-  
-  const currentStatus = selectedBug.value.statusBug
+
+  const currentBucket = selectedBug.value.statusBug
   const history = selectedBug.value.statusChangeHistory
-  
-  // Find the most recent change TO the current status (case-insensitive match)
-  // Iterate backwards through history (newest first)
+
+  // Find the most recent change whose raw to_status maps into the current tab bucket.
   for (let i = history.length - 1; i >= 0; i--) {
     const change = history[i]
     if (change && change.to_status) {
-      // Handle both string and object formats for to_status
-      const toStatusText = typeof change.to_status === 'string' 
-        ? change.to_status 
-        : change.to_status.text || ''
-      
-      if (toStatusText && toStatusText.toLowerCase() === currentStatus.toLowerCase()) {
+      const toStatusText = typeof change.to_status === 'string'
+        ? change.to_status
+        : (change.to_status as any).text || ''
+
+      if (toStatusText && STATUS_BUCKETS[toStatusText] === currentBucket) {
         return {
           changedBy: getCreatorName(change.changed_by_user_id),
           changedAt: formatActivityTimestamp(change.changed_at),
-          status: currentStatus
+          status: currentBucket
         }
       }
     }
   }
-  
+
   return null
 })
 
@@ -1229,7 +1389,7 @@ const handleKeydown = (event: KeyboardEvent) => {
 }
 
 // Watch for activeStatus, priorityFilter, or sortOption changes and auto-select first bug
-watch([activeStatus, priorityFilter, sortOption], () => {
+watch([activeStatus, activeCategory, priorityFilter, sortOption], () => {
   if (currentStatusBugs.value.length > 0) {
     selectedBug.value = currentStatusBugs.value[0]
     currentMediaIndex.value = 0

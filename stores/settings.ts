@@ -71,7 +71,7 @@ interface SettingsState {
 export const useSettingsStore = defineStore('settings', {
   state: (): SettingsState => ({
     hiddenUsers: [],
-    boardIds: [],
+    boardIds: ['1340048713'],
     theme: 'system',
     autoUpdate: false,
     updateInterval: 5,
@@ -261,5 +261,12 @@ export const useSettingsStore = defineStore('settings', {
     },
     canUpdateBoard: (state) => state.hasEnteredPassword
   },
-  persist: true
+  persist: {
+    afterRestore: (ctx) => {
+      const DEFAULT_BOARD_ID = '1340048713'
+      if (!ctx.store.boardIds.includes(DEFAULT_BOARD_ID)) {
+        ctx.store.boardIds.push(DEFAULT_BOARD_ID)
+      }
+    }
+  }
 })
